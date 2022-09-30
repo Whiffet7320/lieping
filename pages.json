@@ -12,20 +12,17 @@
 				"navigationStyle": "custom"
 			}
 		},{
-			"path": "pages/tabBar/user",
-			"style": {
-				"navigationStyle": "custom",
-				"navigationBarTitleText": "我的",
-				"navigationBarBackgroundColor": "#ffffff",
-				"navigationBarTextStyle": "black"
-			}
-		}, {
-			"path": "pages/login/login",
+			"path": "pages/tabBar/tuandui",
 			"style": {
 				"navigationStyle": "custom"
 			}
-		}, {
-			"path": "pages/login/zhuce",
+		},{
+			"path": "pages/tabBar/daohang",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},{
+			"path": "pages/tabBar/wode",
 			"style": {
 				"navigationStyle": "custom"
 			}
@@ -34,14 +31,32 @@
 	"subPackages": [{
 		"root": "pages/index",
 		"pages": [{
-			"path": "jifenguize",
+			"path": "shezhidaohang",
 			"style": {
-				"navigationBarTitleText": "积分规则",
-				"navigationBarBackgroundColor": "#f9edd1",
-				"navigationBarTextStyle": "black"
+				"navigationStyle": "custom"
 			}
-		}, {
-			"path": "fenxiang",
+		},{
+			"path": "waiyu",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},{
+			"path": "xuanzegangwei",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},{
+			"path": "jinzhan",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},{
+			"path": "yinpin",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},{
+			"path": "tongji",
 			"style": {
 				"navigationStyle": "custom"
 			}
@@ -202,5 +217,33 @@
 		"navigationBarTitleText": "螃蟹商城",
 		"navigationBarBackgroundColor": "#ffffff",
 		"backgroundColor": "#FFFFFF"
+	}
+	,
+	"tabBar": {
+		"color": "#909399",
+		"selectedColor": "#ebbfcc",
+		"backgroundColor": "#FFFFFF",
+		"borderStyle": "black",
+		"list": [{
+			"pagePath": "pages/tabBar/index"
+			// "iconPath": "static/shouye.png",
+			// "selectedIconPath": "static/shouye-active.png",
+			// "text": "首页"
+		}, {
+			"pagePath": "pages/tabBar/tuandui"
+			// "iconPath": "static/miandan.png",
+			// "selectedIconPath": "static/miandan-active.png",
+			// "text": "免单"
+		}, {
+			"pagePath": "pages/tabBar/daohang"
+			// "iconPath": "static/miandan.png",
+			// "selectedIconPath": "static/miandan-active.png",
+			// "text": "免单"
+		}, {
+			"pagePath": "pages/tabBar/wode"
+			// "iconPath": "static/miandan.png",
+			// "selectedIconPath": "static/miandan-active.png",
+			// "text": "免单"
+		}]
 	}
 }

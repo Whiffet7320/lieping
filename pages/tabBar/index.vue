@@ -1,362 +1,416 @@
 <template>
 	<view class="index">
-		<view class="fixbtn">
-			<view @click="tofenxiang" class="float1">
-				<image src="/static/image/lujin2107.png" class="pic" mode=""></image>
-				<view class="txt">分享</view>
-			</view>
-			<view @click="toJifenguize" class="float1 float2">
-				<image src="/static/image/lujin2108.png" class="pic" mode=""></image>
-				<view class="txt">规则</view>
-			</view>
-		</view>
-		<u-navbar :title-bold='true' title-color='#000000' :is-back="false" title="首页" title-size='34'>
-			<view class="slot-wrap" @click="goUser">
-				<image src="/static/image/lujin2106.png" class="top-pic" mode=""></image>
-			</view>
-		</u-navbar>
+		<u-toast ref="uToast" />
+		<u-mask :show="maskshow" @click="closeMask"></u-mask>
+		<image @click="toTongji" class="float-img" src="/static/newImage/tabBar/zu28.png" mode=""></image>
+		<image class="img1" src="/static/newImage/tabBar/zu21.png" mode=""></image>
 		<view class="nav1">
-			<image src="/static/image/lujin7894.png" class="pic1" mode=""></image>
 			<view class="tit1">
-				<view class="txt1">蟹蟹有你</view>
-				<view class="txt2">奖励送不停</view>
-			</view>
-			<image src="/static/image/lujin2.png" class="pic2" mode=""></image>
-		</view>
-		<view class="nav2">
-			<image src="/static/image/lujin14561.png" class="pic1" mode="aspectFit"></image>
-			<view class="notice">
-				<image src="/static/image/icon_notice.png" mode="aspectFit" class="icon"></image>
-				<swiper class="list" :autoplay="true" :vertical="true" :circular="true" :interval="3000" :display-multiple-items="2" v-if="list.length>2">
-					<swiper-item class="nitem" catchtouchmove="return" v-for="(item,index) in list" :key="index">
-						<text class="tit">{{item.notice_content}}</text>
-						<text class="time">{{$u.timeFrom(item.time,false)}}</text>
-					</swiper-item>
-				</swiper>
-			</view>
-		</view>
-		<view class="nav3" @click="toQuerendingdan">
-			<image src="/static/image/zu2998.png" class="pic1" mode=""></image>
-			<image :src="obj.img" class="pic2" mode=""></image>
-			<view class="tit1">{{obj.name}}</view>
-			<view class="tit2">
-				<view class="txt1">
-					￥<text class="big">{{obj.price}}</text>元/箱
+				<view @click="changeIndex(1)" :class="{'t1-1':true,'active1':isIndex == 1,'active2':isIndex == 2}">在招
 				</view>
-				<view class="txt2">母蟹{{obj.unit}}两</view>
+				<view @click="changeIndex(2)" :class="{'t1-2':true,'active1':isIndex == 1,'active2':isIndex == 2}">下架
+				</view>
+				<view class="float-n1"></view>
 			</view>
-			<view class="tit3">立即购买</view>
+			<view class="tit2">
+				<view class="item" v-for="(item,i) in 6" :key='i'>
+					<view class="t2-1">
+						<view class="t2-1-left">销售经理</view>
+						<view class="t2-1-right">
+							<view class="t2-1-r-txt1">10-20K*15薪</view>
+							<image @click="closeBtn(item)" style="width: 40rpx;height: 40rpx;" src="/static/newImage/tabBar/zu11.png" mode="">
+							</image>
+						</view>
+					</view>
+					<view class="t2-2">
+						<view class="t2-2-txt1">天宇传媒有限公司</view>
+						<view class="t2-2-txt2">哈萨克斯坦</view>
+					</view>
+					<view class="t2-3">
+						<view @click="toshezhidaohang" class="t3-b1">设置导航</view>
+						<view @click="zuodan" class="t3-b2">做单</view>
+						<view @click="tojinzhan" class="t3-b3">进展</view>
+						<view @click="openPop(i)" :class="{'t3-b4':true}">更多<u-icon
+								style='margin-left: 6rpx;transform: translateY(2rpx);' name="play-right-fill"
+								color="#095bfe" size="18"></u-icon>
+						</view>
+						<mypopover ref='pop' v-if="i == openIndex" class="popov1" @select='changePop'
+							:modalLeftPos='"-244rpx"' :modalTopPos='modalTopPos' :modalOpacity='"1"' :active="popover">
+						</mypopover>
+					</view>
+					<view class="heng"></view>
+				</view>
+			</view>
 		</view>
-		<view class="nav4">温馨提示：请按实际需求购买</view>
+		<u-modal :show-title='false' :show-cancel-button='true' v-model="modshow1" content="确认删除"></u-modal>
+		<u-tabbar active-color="#121212" icon-size='60' height='120' mid-button-size="150" v-model="current"
+			:list="tabbarlist" :mid-button="true"></u-tabbar>
+
 	</view>
 </template>
 
 <script>
-	import {mapGetters,mapState} from "vuex";
+	import mypopover from "@/components/my-popover/dean-popover.vue"
+	import {
+		mapGetters,
+		mapState
+	} from "vuex";
 	export default {
+		components: {
+			mypopover
+		},
 		computed: {
 			...mapGetters(['isLogin'])
 		},
 		data() {
 			return {
-				list: [],
-				scencLid:'',
-				obj:{},
+				modshow1:false,
+				modalTopPos: '26rpx',
+				maskshow: false,
+				openIndex: -1,
+				popover: false,
+				isIndex: 2,
+				tabbarlist: [{
+						iconPath: "/static/newImage/tabBarIcon/1-1.png",
+						selectedIconPath: "/static/newImage/tabBarIcon/1-2.png",
+						text: '首页',
+						customIcon: false,
+						pagePath: "/pages/tabBar/index"
+					},
+					{
+						iconPath: "/static/newImage/tabBarIcon/2-1.png",
+						selectedIconPath: "/static/newImage/tabBarIcon/2-2.png",
+						text: '团队',
+						customIcon: false,
+						pagePath: "/pages/tabBar/tuandui"
+					},
+					{
+						iconPath: "https://rushifu-test.oss-cn-hangzhou.aliyuncs.com/1664157631290.png",
+						selectedIconPath: "https://rushifu-test.oss-cn-hangzhou.aliyuncs.com/1664157631290.png",
+						// text: '发布',
+						midButton: true,
+						customIcon: false,
+					},
+					{
+						iconPath: "/static/newImage/tabBarIcon/3-1.png",
+						selectedIconPath: "/static/newImage/tabBarIcon/3-2.png",
+						text: '导航',
+						customIcon: false,
+						pagePath: "/pages/tabBar/daohang"
+					},
+					{
+						iconPath: "/static/newImage/tabBarIcon/4-1.png",
+						selectedIconPath: "/static/newImage/tabBarIcon/4-2.png",
+						text: '我的',
+						customIcon: false,
+						pagePath: "/pages/tabBar/wode"
+					},
+				],
+				current: 0
 			}
 		},
-		onShow(){
-			this.getData();
+		onShow() {
+			// this.getData();
 		},
-		async onLoad(options) {
-			if (options.scene) {
-				const arr = options.scene.split('_');
-				this.scencLid = arr[0];
-				uni.setStorageSync('scencLid',this.scencLid);
-			}
-		},
+		// async onLoad(options) {
+		// 	if (options.scene) {
+		// 		const arr = options.scene.split('_');
+		// 		this.scencLid = arr[0];
+		// 		uni.setStorageSync('scencLid',this.scencLid);
+		// 	}
+		// },
 		methods: {
-			async getData(){
-				const res = await this.$api.product();
-				if(res.code==200){
-					this.obj = res.data;
-				}
-				const res2 = await this.$api.notice();
-				if(res2.code==200){
-					let data = res2.data;
-					let newArr = data.map((ele)=>{
-						let json = {};
-						json.id = ele.id;
-						json.notice_content = ele.notice_content;
-						json.time = new Date(ele.add_time.replace(/-/g, '/')).getTime()/1000;
-						return json;
-					})
-					this.list = newArr;
-				}
+			closeBtn(item){
+				console.log(item)
+				this.modshow1 = true
 			},
-			toLogin(){
-				uni.navigateTo({
-					url:'/pages/login/login'
+			zuodan() {
+				this.$refs.uToast.show({
+					title: '请先设置导航',
 				})
 			},
-			toJifenguize(){
-				uni.navigateTo({
-					url:'/pages/index/jifenguize'
-				})
+			closeMask() {
+				this.maskshow = false;
+				this.$refs.pop[0].closeBtn();
 			},
-			tofenxiang(){
-				if(this.isLogin){
+			calc(dom) {
+				const query = uni.createSelectorQuery().in(this);
+				query.select(dom).boundingClientRect(data => {
+					console.log(data.top)
+				}).exec();
+			},
+			openPop(i) {
+				this.maskshow = true;
+				this.openIndex = i
+				this.modalTopPos = '26rpx'
+				setTimeout(() => {
+					// console.log(this.$refs.pop[0])
+					this.$refs.pop[0].getTop();
+					// this.popover = true
+				}, 100)
+			},
+			changePop(e) {
+				console.log(e, e.scollTop, 123)
+				this.modalTopPos = e.scollTop > 570 ? '-380rpx' : '26rpx'
+				this.maskshow = e.isclose ? false : true
+				if (e.val == '应聘') {
 					uni.navigateTo({
-						url:'/pages/index/fenxiang'
+						url: '/pages/index/yinpin'
 					})
-				}else{
-					this.toLogin();
+					// this.popover = false
 				}
 			},
-			goUser(){
+			changeIndex(i) {
+				this.isIndex = i
+			},
+			toshezhidaohang() {
 				uni.navigateTo({
-					url:"/pages/tabBar/user"
+					url: '/pages/index/shezhidaohang'
 				})
 			},
-			toQuerendingdan(){
-				if(this.isLogin){
-					this.$store.commit("setProinfo",this.obj);
-					uni.navigateTo({
-						url:'/pages/order/querendingdan'
-					})
-				}else{
-					this.toLogin();
-				}
-			}
+			tojinzhan() {
+				uni.navigateTo({
+					url: '/pages/index/jinzhan'
+				})
+			},
+			toTongji() {
+				uni.navigateTo({
+					url: '/pages/index/tongji'
+				})
+			},
 		}
 	}
 </script>
 
 <style lang="scss">
 	page {
-		background: #ffffff;
+		background: #f8faff;
 	}
 </style>
 <style lang="scss" scoped>
 	.index {
 		position: relative;
 	}
-	.fixbtn{
+
+	.float-img {
+		width: 104rpx;
+		height: 104rpx;
 		position: fixed;
-		bottom: 610rpx;
-		right: 0;
-		z-index: 100;
-	}
-	.float1{
+		right: 36rpx;
+		bottom: 224rpx;
 		z-index: 99;
-		background: rgba(52,2,2,0.83);
-		border-radius: 22rpx 0rpx 0rpx 0rpx;
-		width: 126rpx;
-		height: 48rpx;
-		margin-bottom: 46rpx;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		.pic{
-			width: 30rpx;
-			height: 28rpx;
-		}
-		.txt{
-			margin: 8rpx;
-			font-size: 28rpx;
-			font-weight: 500;
-			color: #ffffff;
-		}
 	}
-	.float2{
-		margin-bottom: 0;
-		.pic{
-			width: 26rpx;
-			height: 32rpx;
-		}
-	}
-	.top-pic {
-		margin-left: 62rpx;
-		width: 34rpx;
-		height: 38rpx;
+
+	.img1 {
+		width: 750rpx;
+		height: 392rpx;
 	}
 
 	.nav1 {
-		margin-top: 44rpx;
-		display: flex;
-		align-items: center;
-		flex-direction: column;
-
-		.pic1 {
-			width: 302rpx;
-			height: 226rpx;
-		}
+		position: absolute;
+		top: 340rpx;
+		margin: 0 20rpx;
 
 		.tit1 {
-			margin-top: 50rpx;
-			width: 402rpx;
-			height: 68rpx;
-			background: #d61d1d;
-			border-radius: 12rpx;
+			position: relative;
 			display: flex;
 			align-items: center;
 			justify-content: center;
 
-			.txt1 {
-				font-size: 36rpx;
-				font-weight: 500;
-				color: #ffffff;
+			.float-n1 {
+				position: absolute;
+				bottom: 0;
+				width: 50rpx;
+				height: 50rpx;
+				left: 50%;
+				transform: translateX(-50%);
+				background: #FFFFFF;
+				z-index: -1;
 			}
 
-			.txt2 {
-				margin-left: 22rpx;
-				width: 204rpx;
-				height: 58rpx;
-				background: #fffefe;
-				border-radius: 12rpx;
-				font-size: 36rpx;
+			.t1-1.active1 {
+				background: #ffffff;
+				border-radius: 20rpx 20rpx 0rpx 20rpx;
+				box-shadow: 0rpx 0rpx 0rpx 0rpx rgba(0, 0, 0, 0.16);
+				color: #121212;
+			}
+
+			.t1-2.active1 {
+				border-radius: 20rpx 20rpx 0rpx 20rpx;
+				box-shadow: 0rpx 0rpx 0rpx 0rpx rgba(0, 0, 0, 0.16);
+			}
+
+			.t1-1.active2 {
+				// background: #ffffff;
+				border-radius: 20rpx 20rpx 20rpx 0rpx;
+				box-shadow: 0rpx 0rpx 0rpx 0rpx rgba(0, 0, 0, 0.16);
+				// color: #121212;
+			}
+
+			.t1-2.active2 {
+				background: #ffffff;
+				color: #121212;
+				border-radius: 20rpx 20rpx 0rpx 20rpx;
+				box-shadow: 0rpx 0rpx 0rpx 0rpx rgba(0, 0, 0, 0.16);
+			}
+
+			.t1-1 {
+				width: 356rpx;
+				height: 80rpx;
+				background: #ececec;
+				border-radius: 20rpx 20rpx 0rpx 0rpx;
+				box-shadow: 0rpx 0rpx 0rpx 0rpx rgba(0, 0, 0, 0.16);
+				font-size: 28rpx;
+				font-family: PingFangSC, PingFangSC-Medium;
 				font-weight: 500;
 				text-align: center;
-				color: #d61d1d;
-				line-height: 58rpx;
+				line-height: 80rpx;
+				color: #b4b4b4;
 			}
-		}
 
-		.pic2 {
-			margin-top: 34rpx;
-			width: 492rpx;
-			height: 352rpx;
-		}
-	}
-
-	.nav2 {
-		position: relative;
-		margin:0 40rpx;
-		height: 212rpx;
-		.pic1 {
-			width: 668rpx;
-			height: 212rpx;
-			position: absolute;
-			top:0;
-			left:0;
-			z-index: 2;
-		}
-		.notice{
-			position: absolute;
-			top: 74rpx;
-			left: 30rpx;
-			z-index: 50;
-			width: 630rpx;
-			height: 120rpx;
-			overflow: hidden;
-			display: flex;
-			.icon{
-				width: 36rpx;
-				height: 34rpx;
-				margin-top: 8rpx;
-				margin-left: 30rpx;
-				margin-right: 19rpx;
+			.t1-2 {
+				width: 356rpx;
+				height: 80rpx;
+				background: #ececec;
+				border-radius: 20rpx 20rpx 0rpx 0rpx;
+				box-shadow: 0rpx 0rpx 0rpx 0rpx rgba(0, 0, 0, 0.16);
+				font-size: 28rpx;
+				font-family: PingFangSC, PingFangSC-Medium;
+				font-weight: 500;
+				text-align: center;
+				line-height: 80rpx;
+				color: #b4b4b4;
 			}
-			.list{
-				flex:1;
-				display: flex;
-				height: 110rpx;
-				overflow: hidden;
-				.nitem{
-					display: flex;
-					align-items: center;
-					width: 100%;
-					.tit{
-						flex:1;
-						font-size: 24rpx;
-						font-family: PingFang SC, PingFang SC-Bold;
-						font-weight: 700;
-						color: #d61d1d;
-					}
-					.time{
-						font-size: 24rpx;
-						font-family: PingFang SC, PingFang SC-Medium;
-						font-weight: 500;
-						color: #d61d1d;
-						padding-right: 22rpx;
-					}
-				}
-			}
-		}
-	}
-
-	.nav3 {
-		margin-top: 26rpx;
-		position: relative;
-		height: 334rpx;
-		overflow: hidden;
-		.pic1 {
-			position: absolute;
-			left: 40rpx;
-			top: 0;
-			width: 668rpx;
-			height: 334rpx;
-		}
-
-		.pic2 {
-			position: absolute;
-			left: 80rpx;
-			top: 50rpx;
-			width: 230rpx;
-			height: 230rpx;
-		}
-
-		.tit1 {
-			position: absolute;
-			left: 386rpx;
-			top: 80rpx;
-			font-size: 40rpx;
-			font-weight: 700;
-			color: #ffffff;
 		}
 
 		.tit2 {
-			display: flex;
-			align-items: center;
-			left: 386rpx;
-			position: absolute;
-			top: 136rpx;
+			background: #FFFFFF;
+			width: 710rpx;
+			overflow-y: scroll;
+			height: 1098rpx;
+			padding-bottom: 140rpx;
 
-			.txt1 {
-				color: #ffffff;
-				font-size: 32rpx;
+			.item {
+				padding: 22rpx 32rpx 0rpx 32rpx;
 
-				.big {
-					font-size: 36rpx;
-					font-weight: 700;
+				.t2-1 {
+					display: flex;
+					align-items: center;
+					justify-content: space-between;
+
+					.t2-1-left {
+						font-size: 32rpx;
+						font-family: PingFangSC, PingFangSC-Semibold;
+						font-weight: 600;
+						color: #000000;
+					}
+
+					.t2-1-right {
+						display: flex;
+						align-items: center;
+
+						.t2-1-r-txt1 {
+							font-size: 30rpx;
+							font-family: PingFangSC, PingFangSC-Semibold;
+							font-weight: 600;
+							color: #4281f8;
+							margin-right: 16rpx;
+						}
+					}
+				}
+
+				.t2-2 {
+					display: flex;
+					align-items: center;
+					justify-content: space-between;
+					margin-top: 52rpx;
+
+					.t2-2-txt1 {
+						color: #666666;
+						font-size: 26rpx;
+						font-family: PingFangSC, PingFangSC-Regular;
+						font-weight: 400;
+					}
+
+					.t2-2-txt2 {
+						color: #bcbcbc;
+						font-size: 26rpx;
+						font-family: PingFangSC, PingFangSC-Regular;
+						font-weight: 400;
+					}
+				}
+
+				.t2-3 {
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					margin-top: 32rpx;
+
+					.t3-b1 {
+						width: 168rpx;
+						height: 54rpx;
+						background: linear-gradient(90deg, #7ea9f2, #0256ff);
+						border-radius: 8rpx;
+						font-size: 26rpx;
+						font-family: PingFangSC, PingFangSC-Regular;
+						font-weight: 400;
+						text-align: center;
+						line-height: 54rpx;
+						color: #ffffff;
+						margin-right: 38rpx;
+					}
+
+					.t3-b2 {
+						width: 114rpx;
+						height: 54rpx;
+						background: #ededed;
+						border-radius: 8rpx;
+						font-size: 26rpx;
+						font-family: PingFangSC, PingFangSC-Regular;
+						font-weight: 400;
+						text-align: center;
+						line-height: 54rpx;
+						color: #b4b4b4;
+						margin-right: 38rpx;
+					}
+
+					.t3-b3 {
+						width: 114rpx;
+						height: 52rpx;
+						border: 2rpx solid #095bfe;
+						border-radius: 8rpx;
+						font-size: 26rpx;
+						font-family: PingFangSC, PingFangSC-Regular;
+						font-weight: 400;
+						text-align: center;
+						line-height: 48rpx;
+						color: #095bfe;
+						margin-right: 40rpx;
+					}
+
+					.t3-b4 {
+						width: 132rpx;
+						height: 52rpx;
+						border: 2rpx solid #095bfe;
+						border-radius: 8rpx;
+						font-size: 26rpx;
+						font-family: PingFangSC, PingFangSC-Regular;
+						font-weight: 400;
+						line-height: 48rpx;
+						color: #095bfe;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+					}
+				}
+
+				.heng {
+					margin-top: 30rpx;
+					width: 648rpx;
+					height: 2rpx;
+					background: #ececec;
 				}
 			}
-			.txt2{
-				margin-left: 30rpx;
-				font-size: 24rpx;
-				font-weight: 500;
-				color: #ffffff;
-			}
 		}
-		.tit3{
-			left: 386rpx;
-			position: absolute;
-			top: 198rpx;
-			width: 170rpx;
-			height: 56rpx;
-			background: #ffffff;
-			border-radius: 16rpx;
-			font-size: 32rpx;
-			font-weight: 700;
-			text-align: center;
-			color: #d91900;
-			line-height: 56rpx;
-		}
-	}
-	.nav4{
-		font-size: 20rpx;
-		font-weight: 500;
-		text-align: center;
-		color: #d61d1d;
-		padding-bottom: 60rpx;
 	}
 </style>

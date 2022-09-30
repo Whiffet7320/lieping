@@ -63,4 +63,7 @@
 	page{
 		font-family: PingFang SC;
 	}
+	/deep/ .u-line-1{
+		font-size: 24rpx;
+	}
 </style>

@@ -1,0 +1,707 @@
+<template>
+	<view class="index">
+		<view class="top"></view>
+		<view class="nav1">
+			<u-icon @click='toBack' style='margin-right: 12rpx;' name="arrow-left" color="#000000" size="36"></u-icon>
+			<view @click='toBack' class="n1-txt">设置导航</view>
+		</view>
+		<view style="margin-top: calc(176rpx + 16rpx);" class="nav2">
+			<view class="n2-tit1">行业背景</view>
+			<view class="n2-box">
+				<view class="n2b-tit1">行业分类<text class="red">*不限</text></view>
+				<view class="n2b-tit2">
+					<view class="l-txt1">大数据行业应用，大数据风控，大数dsadas据广告大数据广告</view>
+					<u-icon name="play-right-fill" color="#000000" size="20"></u-icon>
+				</view>
+				<view class="heng"></view>
+				<view class="n2b-tit3">是否限定细分行业，且在分类中无细分选项，比如只看光伏组件行业</view>
+				<view class="n2b-btns">
+					<view class="b1" @click="isYes = true">
+						<view class="b1-txt1">是</view>
+						<view v-if="!isYes" class="circle"></view>
+						<u-icon v-else name="checkmark-circle-fill" color="#2979ff" size="24"></u-icon>
+					</view>
+					<view @click="isYes = false" style="margin-left: 42rpx;" class="b1">
+						<view class="b1-txt1">否</view>
+						<view v-if="isYes" class="circle"></view>
+						<u-icon v-else name="checkmark-circle-fill" color="#2979ff" size="24"></u-icon>
+					</view>
+				</view>
+			</view>
+		</view>
+		<view class="nav2 nav3">
+			<view class="n2-tit1">公司背景</view>
+			<view class="n2-box">
+				<view class="n2b-tit1">公司规模</view>
+				<!-- <view class="n2b-tit2">
+					<view class="l-txt1">大数据行业应用，大数据风控，大数dsadas据广告大数据广告</view>
+					<u-icon name="play-right-fill" color="#000000" size="20"></u-icon>
+				</view> -->
+				<view class="n2b-tit2" @click='seleShow2_1 = true'>
+					<view :class="{'l-txt1':true,'gray':sele2_1_val == ''}">
+						{{sele2_1_val == '' ? '选择公司规模' : sele2_1_val}}
+					</view>
+					<u-select title='公司规模' @confirm="confirm2_1" v-model="seleShow2_1" :list="sele2_1"></u-select>
+					<u-icon name="play-right-fill" color="#000000" size="20"></u-icon>
+				</view>
+				<view class="heng"></view>
+				<view style="margin-top: 38rpx;" class="n2b-tit1">目标公司（简称）</view>
+				<view class="n2b-tit3">
+					<view class="lt2-txt">仅限</view>
+					<view class="shu"></view>
+					<u-input :clearable='false' placeholder='请输入目标公司，多个关键词用逗号隔开' v-model="value" type="text" />
+				</view>
+				<view class="heng"></view>
+			</view>
+		</view>
+		<view class="nav2 nav3 nav4">
+			<view class="n2-tit1">岗位背景</view>
+			<view class="n2-box">
+				<view class="n2b-tit1">岗位名称中专业方向关键词<text class="red">*此处不要写职级</text></view>
+				<view class="n2b-tit3">
+					<view class="lt2-txt">任意</view>
+					<view class="shu"></view>
+					<u-input :clearable='false' placeholder='如财务，质量，销售…，多个关键词用逗号隔开' v-model="value" type="text" />
+				</view>
+				<view class="heng"></view>
+				<view style="margin-top: 38rpx;" class="n2b-tit1">岗位职级<text class="red">*基础岗位，如专员、主管不要填</text></view>
+				<view class="n2b-tit3">
+					<view class="lt2-txt">任意</view>
+					<view class="shu"></view>
+					<u-input :clearable='false' placeholder='如经理，部长，总监…，多个关键词用逗号隔开' v-model="value" type="text" />
+				</view>
+				<view class="heng"></view>
+				<!--  -->
+				<view style="margin-top: 38rpx;" class="n2b-tit1">职责范围关键词1<text class="red">*如要求有总部经验</text></view>
+				<view class="n2b-tit3">
+					<view @click="popover1 = !popover1" class="lt2-txt">{{pop1_title}}
+						<u-icon style='margin-left: 8rpx;transform: rotate(90deg);' name="play-right-fill"
+							color="#000000" size="20"></u-icon>
+					</view>
+					<view class="shu"></view>
+					<u-input :clearable='false' placeholder='请输入职责关键词，多个关键词用逗号隔开' v-model="value" type="text" />
+				</view>
+				<view class="heng"></view>
+				<popover @select='changePop1' :btnList='popoverList1' :modalLeftPos='"-20rpx"' :modalTopPos='"-10rpx"'
+					:modalOpacity='"1"' :active="popover1"></popover>
+				<!--  -->
+				<view style="margin-top: 38rpx;" class="n2b-tit1">职责范围关键词2<text class="red">*如要求有指定区域经验</text></view>
+				<view class="n2b-tit3">
+					<view @click="popover2 = !popover2" class="lt2-txt">{{pop2_title}}
+						<u-icon style='margin-left: 8rpx;transform: rotate(90deg);' name="play-right-fill"
+							color="#000000" size="20"></u-icon>
+					</view>
+					<view class="shu"></view>
+					<u-input :clearable='false' placeholder='请输入职责关键词，多个关键词用逗号隔开' v-model="value" type="text" />
+				</view>
+				<view class="heng"></view>
+				<popover @select='changePop2' :btnList='popoverList1' :modalLeftPos='"-20rpx"' :modalTopPos='"-10rpx"'
+					:modalOpacity='"1"' :active="popover2"></popover>
+				<!--  -->
+				<view style="margin-top: 38rpx;" class="n2b-tit1">职责范围关键词3<text class="red">*如要求有具体业务经验</text></view>
+				<view class="n2b-tit3">
+					<view @click="popover3 = !popover3" class="lt2-txt">{{pop3_title}}
+						<u-icon style='margin-left: 8rpx;transform: rotate(90deg);' name="play-right-fill"
+							color="#000000" size="20"></u-icon>
+					</view>
+					<view class="shu"></view>
+					<u-input :clearable='false' placeholder='请输入职责关键词，多个关键词用逗号隔开' v-model="value" type="text" />
+				</view>
+				<view class="heng"></view>
+				<popover @select='changePop3' :btnList='popoverList1' :modalLeftPos='"-20rpx"' :modalTopPos='"-10rpx"'
+					:modalOpacity='"1"' :active="popover3"></popover>
+				<!--  -->
+				<view style="margin-top: 38rpx;" class="n2b-tit1">岗位分类<text class="red">*不限</text></view>
+				<view class="n2b-tit2" @click="toGangwei">
+					<view class="l-txt1">{{gangweiValue}}</view>
+					<u-icon name="play-right-fill" color="#000000" size="20"></u-icon>
+				</view>
+				<view class="heng"></view>
+			</view>
+		</view>
+
+
+		<view style="padding-bottom: 220rpx;" class="nav2 nav3 nav4">
+			<view class="n2-tit1">基本条件</view>
+			<view class="n2-box">
+				<view class="n2b-tit1">第一学历<text class="red">*必选</text></view>
+				<view class="n2b-tit2" @click='seleShow4_1 = true'>
+					<view :class="{'l-txt1':true,'gray':sele4_1_val == ''}">
+						{{sele4_1_val == '' ? '请选择学历要求' : sele4_1_val}}
+					</view>
+					<u-select title='第一学历' @confirm="confirm4_1" v-model="seleShow4_1" :list="sele4_1"></u-select>
+					<u-icon name="play-right-fill" color="#000000" size="20"></u-icon>
+				</view>
+				<view class="heng"></view>
+				<!--  -->
+				<view style="margin-top: 38rpx;" class="n2b-tit1">硕博要求</view>
+				<view class="n2b-tit2" @click='seleShow4_2 = true'>
+					<view :class="{'l-txt1':true,'gray':sele4_2_val == ''}">
+						{{sele4_2_val == '' ? '请选择学历要求' : sele4_2_val}}
+					</view>
+					<u-select title='硕博要求' @confirm="confirm4_2" v-model="seleShow4_2" :list="sele4_2"></u-select>
+					<u-icon name="play-right-fill" color="#000000" size="20"></u-icon>
+				</view>
+				<view class="heng"></view>
+				<!--  -->
+				<view style="margin-top: 38rpx;" class="n2b-tit1">学科专业</view>
+				<view class="n2b-tit3">
+					<view class="lt2-txt">任意</view>
+					<view class="shu"></view>
+					<u-input :clearable='false' placeholder='多个关键词用逗号隔开' v-model="value" type="text" />
+				</view>
+				<view class="heng"></view>
+				<!--  -->
+				<view style="margin-top: 38rpx;" class="n2b-tit1">外语</view>
+				<view class="n2b-tit2" @click='toWaiyu'>
+					<view :class="{'l-txt1':true,'gray':sele4_2_val == ''}">
+						{{sele4_2_val == '' ? '请选择外语' : sele4_2_val}}
+					</view>
+					<!-- <u-select @confirm="confirm4_2" v-model="seleShow4_2" :list="sele4_2"></u-select> -->
+					<u-icon name="play-right-fill" color="#000000" size="20"></u-icon>
+				</view>
+				<view class="heng"></view>
+				<!--  -->
+				<view style="margin-top: 38rpx;" class="n2b-tit1">熟练程度<text class="red">*必选</text></view>
+				<view class="n2b-tit2" @click='seleShow4_3 = true'>
+					<view :class="{'l-txt1':true,'gray':sele4_3_val == ''}">
+						{{sele4_3_val == '' ? '请选择熟练程度' : sele4_3_val}}
+					</view>
+					<u-select title='熟练程度' @confirm="confirm4_3" v-model="seleShow4_3" :list="sele4_3"></u-select>
+					<u-icon name="play-right-fill" color="#000000" size="20"></u-icon>
+				</view>
+				<view class="heng"></view>
+				<!--  -->
+				<view style="margin-top: 38rpx;" class="n2b-tit1">必备技能关键词</view>
+				<view class="n2b-tit3">
+					<view @click="popover4 = !popover4" class="lt2-txt">{{pop4_title}}
+						<u-icon style='margin-left: 8rpx;transform: rotate(90deg);' name="play-right-fill"
+							color="#000000" size="20"></u-icon>
+					</view>
+					<view class="shu"></view>
+					<u-input :clearable='false' placeholder='如C++，JAVA…,多个关键词用逗号隔开' v-model="value" type="text" />
+				</view>
+				<view class="heng"></view>
+				<popover @select='changePop4' :btnList='popoverList1' :modalLeftPos='"-20rpx"' :modalTopPos='"-10rpx"'
+					:modalOpacity='"1"' :active="popover4"></popover>
+				<!--  -->
+				<view style="margin-top: 38rpx;" class="n2b-tit1">年龄<text class="red">*必选</text></view>
+				<view class="age-box">
+					<view class="a-left" @click='seleShow5_1 = true'>
+						<view class="al-t">
+							<u-icon
+								style='margin-left: 8rpx;transform: rotate(90deg);margin-left: 22rpx;margin-right: 70rpx;'
+								name="play-right-fill" color="#000000" size="20"></u-icon>
+
+							<view v-if="sele5_1_val == ''" :class="{'txt':true,'gray':sele5_1_val == ''}">
+								最小
+							</view>
+							<view v-else :class="{'txt':true}">{{sele5_1_val}}</view>
+							<!-- <view :class="{'txt':true,'gray':sele5_1_val == ''}">
+									{{sele5_1_val == '' ? '最小' : sele5_1_val}}</view>
+							</view> -->
+						</view>
+						<u-select @confirm="confirm5_1" v-model="seleShow5_1" :list="sele5_1"></u-select>
+						<view class="hengg"></view>
+					</view>
+					<view class="heng2"></view>
+					<view class="a-right" @click="seleShow5_2 = true">
+						<view class="ar-t">
+							<u-icon
+								style='margin-left: 8rpx;transform: rotate(90deg);margin-left: 22rpx;margin-right: 70rpx;'
+								name="play-right-fill" color="#000000" size="20"></u-icon>
+							<view :class="{'txt':true,'gray':sele5_2_val == ''}">
+								{{sele5_2_val == '' ? '最大' : sele5_2_val}}
+							</view>
+						</view>
+						<u-select @confirm="confirm5_2" v-model="seleShow5_2" :list="sele5_2"></u-select>
+						<view class="hengg"></view>
+					</view>
+				</view>
+				<!--  -->
+				<view style="margin-top: 38rpx;" class="n2b-tit1">薪酬<text class="red">*必选</text></view>
+				<view class="n2b-tit2" @click='seleShow4_2 = true'>
+					<view :class="{'l-txt1':true,'gray':sele4_2_val == ''}">
+						{{sele4_2_val == '' ? '请选择薪酬范围' : sele4_2_val}}
+					</view>
+					<u-select @confirm="confirm4_2" v-model="seleShow4_2" :list="sele4_2"></u-select>
+					<u-icon name="play-right-fill" color="#000000" size="20"></u-icon>
+				</view>
+				<view class="heng"></view>
+			</view>
+		</view>
+		<view class="footer">
+			<view class="btn">完成</view>
+		</view>
+
+	</view>
+</template>
+
+<script>
+	import popover from '../../components/dean-popover/dean-popover.vue'
+	export default {
+		components: {
+			popover
+		},
+		data() {
+			return {
+				gangweiValue:'',
+				gangweiList: [],
+				popoverList1: ['任意', '全部'],
+				isYes: true,
+				value: '',
+				popover1: false,
+				pop1_title: '任意',
+				popover2: false,
+				pop2_title: '任意',
+				popover3: false,
+				pop3_title: '任意',
+				popover4: false,
+				pop4_title: '任意',
+				seleShow4_1: false,
+				sele4_1: [{
+						value: '1',
+						label: '大专'
+					},
+					{
+						value: '2',
+						label: '本科'
+					}
+				],
+				sele4_1_val: '',
+				seleShow4_2: false,
+				sele4_2: [{
+						value: '1',
+						label: '硕士'
+					},
+					{
+						value: '2',
+						label: '博士'
+					},
+					{
+						value: '3',
+						label: '—'
+					}
+				],
+				sele4_2_val: '',
+				seleShow4_3: false,
+				sele4_3: [{
+						value: '1',
+						label: '读写精通'
+					},
+					{
+						value: '2',
+						label: '听说读写精通'
+					}
+				],
+				sele4_3_val: '',
+				seleShow5_1: false,
+				sele5_1: [],
+				sele5_1_val: '',
+				seleShow5_2: false,
+				sele5_2: [],
+				sele5_2_val: '',
+				seleShow2_1: false,
+				sele2_1: [{
+						value: '1',
+						label: '1000人以上'
+					},
+					{
+						value: '2',
+						label: '2000人以上'
+					},
+					{
+						value: '3',
+						label: '5000人以上'
+					},
+					{
+						value: '4',
+						label: '10000人以上'
+					},
+					{
+						value: '5',
+						label: '不限'
+					}
+				],
+				sele2_1_val: '',
+			}
+		},
+		onShow() {
+			this.sele5_1 = []
+			this.sele5_2 = []
+			for (let i = 16; i < 60; i++) {
+				this.sele5_1.push({
+					value: i,
+					label: i
+				})
+				this.sele5_2.push({
+					value: i,
+					label: i
+				})
+			}
+		},
+		onLoad() {
+
+		},
+		methods: {
+			getGangweiData(e){
+				// console.log(e)
+				var arr = []
+				this.gangweiList = e;
+				this.gangweiList.forEach(ele=>{
+					arr.push(ele.name)
+				})
+				this.gangweiValue = arr.toString()
+			},
+			toBack(){
+				uni.navigateBack({
+					delta:1
+				})
+				// uni.switchTab({
+				// 	url:'/pages/tabBar/daohang'
+				// })
+			},
+			toGangwei(){
+				uni.navigateTo({
+					url:'/pages/index/xuanzegangwei'
+				})
+			},
+			toWaiyu() {
+				uni.navigateTo({
+					url: '/pages/index/waiyu'
+				})
+			},
+			changePop1(e) {
+				console.log(e)
+				this.pop1_title = e
+				this.popover1 = false
+			},
+			changePop2(e) {
+				console.log(e)
+				this.pop2_title = e
+				this.popover2 = false
+			},
+			changePop3(e) {
+				console.log(e)
+				this.pop3_title = e
+				this.popover3 = false
+			},
+			changePop4(e) {
+				console.log(e)
+				this.pop4_title = e
+				this.popover4 = false
+			},
+			confirm4_1(e) {
+				console.log(e[0])
+				this.sele4_1_val = e[0].label
+			},
+			confirm4_2(e) {
+				console.log(e[0])
+				this.sele4_2_val = e[0].label
+			},
+			confirm4_3(e) {
+				console.log(e[0])
+				this.sele4_3_val = e[0].label
+			},
+			confirm5_1(e) {
+				console.log(e[0])
+				this.sele5_1_val = e[0].label
+			},
+			confirm5_2(e) {
+				console.log(e[0])
+				this.sele5_2_val = e[0].label
+			},
+			confirm2_1(e) {
+				console.log(e[0])
+				this.sele2_1_val = e[0].label
+			},
+		}
+	}
+</script>
+
+<style lang="scss">
+	page {
+		background: #f8faff;
+	}
+</style>
+<style lang="scss" scoped>
+	.index {
+		position: relative;
+	}
+
+	.top {
+		position: fixed;
+		top: 0rpx;
+		z-index: 1000;
+		height: 88rpx;
+		width: 100%;
+		background: #f8faff;
+	}
+
+	.nav1 {
+		z-index: 1000;
+		position: fixed;
+		top: 88rpx;
+		background: #f8faff;
+		width: 100%;
+		height: 88rpx;
+		display: flex;
+		align-items: center;
+		font-size: 36rpx;
+		font-family: PingFangSC, PingFangSC-Medium;
+		font-weight: 600;
+		color: #000000;
+		// padding-top: 128rpx;
+		// padding-left: 34rpx;
+		padding: 20rpx 32rpx 20rpx 32rpx;
+
+		/deep/ .uicon-arrow-left {
+			font-weight: 800 !important;
+		}
+	}
+
+	.nav2 {
+		margin-top: 32rpx;
+
+		.n2-tit1 {
+			font-size: 36rpx;
+			font-family: PingFangSC, PingFangSC-Medium;
+			font-weight: 600;
+			color: #000000;
+			margin-left: 52rpx;
+			margin-bottom: 32rpx;
+		}
+
+		.n2-box {
+			width: 710rpx;
+			margin: 0 auto;
+			background: #ffffff;
+			border-radius: 20rpx;
+			padding: 48rpx 30rpx;
+
+			.n2b-tit1 {
+				font-size: 32rpx;
+				font-family: PingFangSC, PingFangSC-Medium;
+				font-weight: 500;
+				color: #000000;
+				margin-bottom: 20rpx;
+
+				.red {
+					font-size: 20rpx;
+					font-family: PingFangSC, PingFangSC-Regular;
+					font-weight: 400;
+					color: #ff5c50;
+					margin-left: 16rpx;
+				}
+			}
+
+			.n2b-tit2 {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+
+				.l-txt1 {
+					width: 560rpx;
+					font-size: 28rpx;
+					font-family: PingFangSC, PingFangSC-Regular;
+					font-weight: 400;
+					color: #000000;
+					overflow: hidden;
+					text-overflow: ellipsis;
+					white-space: nowrap; // 默认不换行；
+				}
+
+				.l-txt1.gray {
+					color: #bcbcbc;
+				}
+			}
+
+			.heng {
+				margin-top: 8rpx;
+				height: 4rpx;
+				background: #ececec;
+			}
+
+			.n2b-tit3 {
+				font-size: 26rpx;
+				font-family: PingFangSC, PingFangSC-Regular;
+				font-weight: 400;
+				color: #707070;
+				margin-top: 20rpx;
+			}
+
+			.n2b-btns {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				margin-top: 32rpx;
+
+				.b1 {
+					width: 198rpx;
+					height: 52rpx;
+					background: #f8faff;
+					border-radius: 26rpx;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+
+					.b1-txt1 {
+						font-size: 28rpx;
+						font-family: PingFangSC, PingFangSC-Medium;
+						font-weight: 600;
+						color: #121212;
+						margin-right: 16rpx;
+					}
+
+					.circle {
+						width: 24rpx;
+						height: 24rpx;
+						border: 2rpx solid #979797;
+						border-radius: 50%;
+					}
+				}
+			}
+		}
+	}
+
+	.nav2.nav3 {
+		.n2b-tit3 {
+			display: flex;
+			align-items: center;
+
+			.lt2-txt {
+				font-size: 28rpx;
+				font-family: PingFangSC, PingFangSC-Regular;
+				font-weight: 400;
+				color: #121212;
+			}
+
+			.shu {
+				width: 4rpx;
+				height: 48rpx;
+				background: #979797;
+				margin: 0 18rpx;
+			}
+
+			/deep/ .u-input__input {
+				width: 552rpx;
+				font-size: 24rpx;
+			}
+		}
+	}
+
+	.nav2.nav3.nav4 {
+		/deep/ .u-input__input {
+			width: 522rpx;
+			font-size: 24rpx;
+		}
+
+		.age-box {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+
+			.a-left {
+				width: 268rpx;
+				display: flex;
+				flex-direction: column;
+
+				.al-t {
+					width: 268rpx;
+					display: flex;
+					align-items: center;
+
+					.txt {
+						width: 560rpx;
+						font-size: 28rpx;
+						font-family: PingFangSC, PingFangSC-Regular;
+						font-weight: 400;
+						color: #000000;
+						overflow: hidden;
+						text-overflow: ellipsis;
+						white-space: nowrap; // 默认不换行；
+					}
+
+					.txt.gray {
+						color: #bcbcbc;
+					}
+				}
+
+				.hengg {
+					margin-top: 8rpx;
+					width: 268rpx;
+					height: 4rpx;
+					background: #ececec;
+				}
+			}
+
+			.heng2 {
+				width: 66rpx;
+				height: 2rpx;
+				background: #121212;
+			}
+
+			.a-right {
+				.ar-t {
+					width: 268rpx;
+					display: flex;
+					align-items: center;
+
+					.txt {
+						width: 560rpx;
+						font-size: 28rpx;
+						font-family: PingFangSC, PingFangSC-Regular;
+						font-weight: 400;
+						color: #000000;
+						overflow: hidden;
+						text-overflow: ellipsis;
+						white-space: nowrap; // 默认不换行；
+					}
+
+					.txt.gray {
+						color: #bcbcbc;
+					}
+				}
+
+				.hengg {
+					margin-top: 8rpx;
+					width: 268rpx;
+					height: 4rpx;
+					background: #ececec;
+				}
+			}
+		}
+	}
+
+	.footer {
+		width: 100%;
+		position: fixed;
+		bottom: 0;
+		height: 200rpx;
+		z-index: 99;
+		background: #ffffff;
+		box-shadow: 0rpx -4rpx 8rpx 0rpx rgba(0, 0, 0, 0.03);
+
+		.btn {
+			margin: 38rpx auto;
+			width: 570rpx;
+			height: 96rpx;
+			background: #1362fd;
+			border-radius: 48rpx;
+			font-size: 32rpx;
+			font-family: PingFangSC, PingFangSC-Medium;
+			font-weight: 500;
+			text-align: center;
+			color: #ffffff;
+			line-height: 96rpx;
+		}
+	}
+	/deep/ .u-select__header__title{
+		font-size: 32rpx;
+	}
+	/deep/ .u-select__body__picker-view__item{
+		.u-line-1{
+			font-size: 36rpx;
+		}
+	}
+</style>
