@@ -6,12 +6,13 @@
 				<image class="n2-l-img" src="/static/Group.png" mode=""></image>
 				<view class="n2-l-r">
 					<view class="n2-l-r-txt1">奇哒巴哒</view>
-					<view class="n2-l-r-txt2">个人身份：<text class="blue">猎头</text></view>
+					<view class="n2-l-r-txt2">个人身份：<text class="blue">猎头</text><image class="myIcon" src="/static/newImage/tabBar/qiehuan.png" mode=""></image></view>
+					
 				</view>
 			</view>
 			<view class="n2-r">
-				<view class="n2-r-b1">认证猎企</view>
-				<view class="n2-r-b2">加入猎企</view>
+				<view @click="torenzheng" class="n2-r-b1">认证猎企</view>
+				<view @click="tojiaru" class="n2-r-b2">加入猎企</view>
 			</view>
 		</view>
 		<view class="nav3">
@@ -23,7 +24,7 @@
 						<view class="i-l-tit2">受理时间<text style="margin: 0 12rpx;">丨</text>2022-08-22 09:45:41</view>
 					</view>
 					<view class="i-r">
-						<view class="i-r-b1">详情</view>
+						<view @click="toXiangqin" class="i-r-b1">详情</view>
 						<view class="i-r-b2">删除</view>
 					</view>
 				</view>
@@ -77,6 +78,23 @@
 				current: 1
 			}
 		},
+		methods:{
+			toXiangqin(){
+				uni.navigateTo({
+					url:'/pages/wode/gangweixiangqin'
+				})
+			},
+			torenzheng(){
+				uni.navigateTo({
+					url:'/pages/wode/renzheng'
+				})
+			},
+			tojiaru(){
+				uni.navigateTo({
+					url:'/pages/wode/jiaru'
+				})
+			},
+		}
 	}
 </script>
 
@@ -108,6 +126,8 @@
 			.n2-l-img{
 				width: 120rpx;
 				height: 120rpx;
+				border-radius: 50%;
+				border: 2rpx solid #1362FD;
 			}
 			.n2-l-r{
 				margin-left: 20rpx;
@@ -123,8 +143,14 @@
 					font-family: PingFangSC, PingFangSC-Regular;
 					font-weight: 400;
 					color: #121212;
+					display: flex;
+					align-items: center;
 					.blue{
 						color: #1362FD;
+					}
+					.myIcon{
+						width: 36rpx;
+						height: 36rpx;
 					}
 				}
 			}

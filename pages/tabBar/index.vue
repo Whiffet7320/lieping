@@ -90,6 +90,7 @@
 						// text: '发布',
 						midButton: true,
 						customIcon: false,
+						pagePath: "/pages/gangwei/chuanjiangangwei"
 					},
 					{
 						iconPath: "/static/newImage/tabBarIcon/3-1.png",

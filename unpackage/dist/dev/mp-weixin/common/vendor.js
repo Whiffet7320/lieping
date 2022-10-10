@@ -12148,66 +12148,6 @@ module.exports = __webpack_require__(/*! ./lib/axios */ 43);
 
 /***/ }),
 
-/***/ 422:
-/*!*****************************************************************************************!*\
-  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/uview-ui/libs/util/emitter.js ***!
-  \*****************************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /**
-                                                                                                      * 递归使用 call 方式this指向
-                                                                                                      * @param componentName // 需要找的组件的名称
-                                                                                                      * @param eventName // 事件名称
-                                                                                                      * @param params // 需要传递的参数
-                                                                                                      */
-function _broadcast(componentName, eventName, params) {
-  // 循环子节点找到名称一样的子节点 否则 递归 当前子节点
-  this.$children.map(function (child) {
-    if (componentName === child.$options.name) {
-      child.$emit.apply(child, [eventName].concat(params));
-    } else {
-      _broadcast.apply(child, [componentName, eventName].concat(params));
-    }
-  });
-}var _default =
-{
-  methods: {
-    /**
-              * 派发 (向上查找) (一个)
-              * @param componentName // 需要找的组件的名称
-              * @param eventName // 事件名称
-              * @param params // 需要传递的参数
-              */
-    dispatch: function dispatch(componentName, eventName, params) {
-      var parent = this.$parent || this.$root; //$parent 找到最近的父节点 $root 根节点
-      var name = parent.$options.name; // 获取当前组件实例的name
-      // 如果当前有节点 && 当前没名称 且 当前名称等于需要传进来的名称的时候就去查找当前的节点
-      // 循环出当前名称的一样的组件实例
-      while (parent && (!name || name !== componentName)) {
-        parent = parent.$parent;
-        if (parent) {
-          name = parent.$options.name;
-        }
-      }
-      // 有节点表示当前找到了name一样的实例
-      if (parent) {
-        parent.$emit.apply(parent, [eventName].concat(params));
-      }
-    },
-    /**
-        * 广播 (向下查找) (广播多个)
-        * @param componentName // 需要找的组件的名称
-        * @param eventName // 事件名称
-        * @param params // 需要传递的参数
-        */
-    broadcast: function broadcast(componentName, eventName, params) {
-      _broadcast.call(this, componentName, eventName, params);
-    } } };exports.default = _default;
-
-/***/ }),
-
 /***/ 43:
 /*!******************************************************************************!*\
   !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/axios/lib/axios.js ***!
@@ -12896,7 +12836,4891 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 
 /***/ }),
 
-/***/ 470:
+/***/ 48:
+/*!************************************************************************************************!*\
+  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/axios/lib/core/InterceptorManager.js ***!
+  \************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(/*! ./../utils */ 44);
+
+function InterceptorManager() {
+  this.handlers = [];
+}
+
+/**
+   * Add a new interceptor to the stack
+   *
+   * @param {Function} fulfilled The function to handle `then` for a `Promise`
+   * @param {Function} rejected The function to handle `reject` for a `Promise`
+   *
+   * @return {Number} An ID used to remove interceptor later
+   */
+InterceptorManager.prototype.use = function use(fulfilled, rejected, options) {
+  this.handlers.push({
+    fulfilled: fulfilled,
+    rejected: rejected,
+    synchronous: options ? options.synchronous : false,
+    runWhen: options ? options.runWhen : null });
+
+  return this.handlers.length - 1;
+};
+
+/**
+    * Remove an interceptor from the stack
+    *
+    * @param {Number} id The ID that was returned by `use`
+    */
+InterceptorManager.prototype.eject = function eject(id) {
+  if (this.handlers[id]) {
+    this.handlers[id] = null;
+  }
+};
+
+/**
+    * Iterate over all the registered interceptors
+    *
+    * This method is particularly useful for skipping over any
+    * interceptors that may have become `null` calling `eject`.
+    *
+    * @param {Function} fn The function to call for each interceptor
+    */
+InterceptorManager.prototype.forEach = function forEach(fn) {
+  utils.forEach(this.handlers, function forEachHandler(h) {
+    if (h !== null) {
+      fn(h);
+    }
+  });
+};
+
+module.exports = InterceptorManager;
+
+/***/ }),
+
+/***/ 49:
+/*!*********************************************************************************************!*\
+  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/axios/lib/core/dispatchRequest.js ***!
+  \*********************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(/*! ./../utils */ 44);
+var transformData = __webpack_require__(/*! ./transformData */ 50);
+var isCancel = __webpack_require__(/*! ../cancel/isCancel */ 65);
+var defaults = __webpack_require__(/*! ../defaults */ 51);
+
+/**
+                                        * Throws a `Cancel` if cancellation has been requested.
+                                        */
+function throwIfCancellationRequested(config) {
+  if (config.cancelToken) {
+    config.cancelToken.throwIfRequested();
+  }
+}
+
+/**
+   * Dispatch a request to the server using the configured adapter.
+   *
+   * @param {object} config The config that is to be used for the request
+   * @returns {Promise} The Promise to be fulfilled
+   */
+module.exports = function dispatchRequest(config) {
+  throwIfCancellationRequested(config);
+
+  // Ensure headers exist
+  config.headers = config.headers || {};
+
+  // Transform request data
+  config.data = transformData.call(
+  config,
+  config.data,
+  config.headers,
+  config.transformRequest);
+
+
+  // Flatten headers
+  config.headers = utils.merge(
+  config.headers.common || {},
+  config.headers[config.method] || {},
+  config.headers);
+
+
+  utils.forEach(
+  ['delete', 'get', 'head', 'post', 'put', 'patch', 'common'],
+  function cleanHeaderConfig(method) {
+    delete config.headers[method];
+  });
+
+
+  var adapter = config.adapter || defaults.adapter;
+
+  return adapter(config).then(function onAdapterResolution(response) {
+    throwIfCancellationRequested(config);
+
+    // Transform response data
+    response.data = transformData.call(
+    config,
+    response.data,
+    response.headers,
+    config.transformResponse);
+
+
+    return response;
+  }, function onAdapterRejection(reason) {
+    if (!isCancel(reason)) {
+      throwIfCancellationRequested(config);
+
+      // Transform response data
+      if (reason && reason.response) {
+        reason.response.data = transformData.call(
+        config,
+        reason.response.data,
+        reason.response.headers,
+        config.transformResponse);
+
+      }
+    }
+
+    return Promise.reject(reason);
+  });
+};
+
+/***/ }),
+
+/***/ 5:
+/*!*********************************************************!*\
+  !*** C:/Users/Administrator/Desktop/zhaopin/pages.json ***!
+  \*********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+
+
+/***/ }),
+
+/***/ 50:
+/*!*******************************************************************************************!*\
+  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/axios/lib/core/transformData.js ***!
+  \*******************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(/*! ./../utils */ 44);
+var defaults = __webpack_require__(/*! ./../defaults */ 51);
+
+/**
+                                          * Transform the data for a request or a response
+                                          *
+                                          * @param {Object|String} data The data to be transformed
+                                          * @param {Array} headers The headers for the request or response
+                                          * @param {Array|Function} fns A single function or Array of functions
+                                          * @returns {*} The resulting transformed data
+                                          */
+module.exports = function transformData(data, headers, fns) {
+  var context = this || defaults;
+  /*eslint no-param-reassign:0*/
+  utils.forEach(fns, function transform(fn) {
+    data = fn.call(context, data, headers);
+  });
+
+  return data;
+};
+
+/***/ }),
+
+/***/ 51:
+/*!*********************************************************************************!*\
+  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/axios/lib/defaults.js ***!
+  \*********************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(process) {
+
+var utils = __webpack_require__(/*! ./utils */ 44);
+var normalizeHeaderName = __webpack_require__(/*! ./helpers/normalizeHeaderName */ 54);
+var enhanceError = __webpack_require__(/*! ./core/enhanceError */ 55);
+
+var DEFAULT_CONTENT_TYPE = {
+  'Content-Type': 'application/x-www-form-urlencoded' };
+
+
+function setContentTypeIfUnset(headers, value) {
+  if (!utils.isUndefined(headers) && utils.isUndefined(headers['Content-Type'])) {
+    headers['Content-Type'] = value;
+  }
+}
+
+function getDefaultAdapter() {
+  var adapter;
+  if (typeof XMLHttpRequest !== 'undefined') {
+    // For browsers use XHR adapter
+    adapter = __webpack_require__(/*! ./adapters/xhr */ 56);
+  } else if (typeof process !== 'undefined' && Object.prototype.toString.call(process) === '[object process]') {
+    // For node use HTTP adapter
+    adapter = __webpack_require__(/*! ./adapters/http */ 56);
+  }
+  return adapter;
+}
+
+function stringifySafely(rawValue, parser, encoder) {
+  if (utils.isString(rawValue)) {
+    try {
+      (parser || JSON.parse)(rawValue);
+      return utils.trim(rawValue);
+    } catch (e) {
+      if (e.name !== 'SyntaxError') {
+        throw e;
+      }
+    }
+  }
+
+  return (encoder || JSON.stringify)(rawValue);
+}
+
+var defaults = {
+
+  transitional: {
+    silentJSONParsing: true,
+    forcedJSONParsing: true,
+    clarifyTimeoutError: false },
+
+
+  adapter: getDefaultAdapter(),
+
+  transformRequest: [function transformRequest(data, headers) {
+    normalizeHeaderName(headers, 'Accept');
+    normalizeHeaderName(headers, 'Content-Type');
+
+    if (utils.isFormData(data) ||
+    utils.isArrayBuffer(data) ||
+    utils.isBuffer(data) ||
+    utils.isStream(data) ||
+    utils.isFile(data) ||
+    utils.isBlob(data))
+    {
+      return data;
+    }
+    if (utils.isArrayBufferView(data)) {
+      return data.buffer;
+    }
+    if (utils.isURLSearchParams(data)) {
+      setContentTypeIfUnset(headers, 'application/x-www-form-urlencoded;charset=utf-8');
+      return data.toString();
+    }
+    if (utils.isObject(data) || headers && headers['Content-Type'] === 'application/json') {
+      setContentTypeIfUnset(headers, 'application/json');
+      return stringifySafely(data);
+    }
+    return data;
+  }],
+
+  transformResponse: [function transformResponse(data) {
+    var transitional = this.transitional;
+    var silentJSONParsing = transitional && transitional.silentJSONParsing;
+    var forcedJSONParsing = transitional && transitional.forcedJSONParsing;
+    var strictJSONParsing = !silentJSONParsing && this.responseType === 'json';
+
+    if (strictJSONParsing || forcedJSONParsing && utils.isString(data) && data.length) {
+      try {
+        return JSON.parse(data);
+      } catch (e) {
+        if (strictJSONParsing) {
+          if (e.name === 'SyntaxError') {
+            throw enhanceError(e, this, 'E_JSON_PARSE');
+          }
+          throw e;
+        }
+      }
+    }
+
+    return data;
+  }],
+
+  /**
+       * A timeout in milliseconds to abort a request. If set to 0 (default) a
+       * timeout is not created.
+       */
+  timeout: 0,
+
+  xsrfCookieName: 'XSRF-TOKEN',
+  xsrfHeaderName: 'X-XSRF-TOKEN',
+
+  maxContentLength: -1,
+  maxBodyLength: -1,
+
+  validateStatus: function validateStatus(status) {
+    return status >= 200 && status < 300;
+  } };
+
+
+defaults.headers = {
+  common: {
+    'Accept': 'application/json, text/plain, */*' } };
+
+
+
+utils.forEach(['delete', 'get', 'head'], function forEachMethodNoData(method) {
+  defaults.headers[method] = {};
+});
+
+utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
+  defaults.headers[method] = utils.merge(DEFAULT_CONTENT_TYPE);
+});
+
+module.exports = defaults;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../../../HBuilderX/plugins/uniapp-cli/node_modules/node-libs-browser/mock/process.js */ 52)))
+
+/***/ }),
+
+/***/ 513:
+/*!*****************************************************************************************!*\
+  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/uview-ui/libs/util/emitter.js ***!
+  \*****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0; /**
+                                                                                                      * 递归使用 call 方式this指向
+                                                                                                      * @param componentName // 需要找的组件的名称
+                                                                                                      * @param eventName // 事件名称
+                                                                                                      * @param params // 需要传递的参数
+                                                                                                      */
+function _broadcast(componentName, eventName, params) {
+  // 循环子节点找到名称一样的子节点 否则 递归 当前子节点
+  this.$children.map(function (child) {
+    if (componentName === child.$options.name) {
+      child.$emit.apply(child, [eventName].concat(params));
+    } else {
+      _broadcast.apply(child, [componentName, eventName].concat(params));
+    }
+  });
+}var _default =
+{
+  methods: {
+    /**
+              * 派发 (向上查找) (一个)
+              * @param componentName // 需要找的组件的名称
+              * @param eventName // 事件名称
+              * @param params // 需要传递的参数
+              */
+    dispatch: function dispatch(componentName, eventName, params) {
+      var parent = this.$parent || this.$root; //$parent 找到最近的父节点 $root 根节点
+      var name = parent.$options.name; // 获取当前组件实例的name
+      // 如果当前有节点 && 当前没名称 且 当前名称等于需要传进来的名称的时候就去查找当前的节点
+      // 循环出当前名称的一样的组件实例
+      while (parent && (!name || name !== componentName)) {
+        parent = parent.$parent;
+        if (parent) {
+          name = parent.$options.name;
+        }
+      }
+      // 有节点表示当前找到了name一样的实例
+      if (parent) {
+        parent.$emit.apply(parent, [eventName].concat(params));
+      }
+    },
+    /**
+        * 广播 (向下查找) (广播多个)
+        * @param componentName // 需要找的组件的名称
+        * @param eventName // 事件名称
+        * @param params // 需要传递的参数
+        */
+    broadcast: function broadcast(componentName, eventName, params) {
+      _broadcast.call(this, componentName, eventName, params);
+    } } };exports.default = _default;
+
+/***/ }),
+
+/***/ 52:
+/*!********************************************************!*\
+  !*** ./node_modules/node-libs-browser/mock/process.js ***!
+  \********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports.nextTick = function nextTick(fn) {
+    var args = Array.prototype.slice.call(arguments);
+    args.shift();
+    setTimeout(function () {
+        fn.apply(null, args);
+    }, 0);
+};
+
+exports.platform = exports.arch = 
+exports.execPath = exports.title = 'browser';
+exports.pid = 1;
+exports.browser = true;
+exports.env = {};
+exports.argv = [];
+
+exports.binding = function (name) {
+	throw new Error('No such module. (Possibly not yet loaded)')
+};
+
+(function () {
+    var cwd = '/';
+    var path;
+    exports.cwd = function () { return cwd };
+    exports.chdir = function (dir) {
+        if (!path) path = __webpack_require__(/*! path */ 53);
+        cwd = path.resolve(dir, cwd);
+    };
+})();
+
+exports.exit = exports.kill = 
+exports.umask = exports.dlopen = 
+exports.uptime = exports.memoryUsage = 
+exports.uvCounters = function() {};
+exports.features = {};
+
+
+/***/ }),
+
+/***/ 528:
+/*!************************************************************************************!*\
+  !*** C:/Users/Administrator/Desktop/zhaopin/components/lh-select-city/cityData.js ***!
+  \************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var cityData = [
+{
+  letter: 'A',
+  list: [
+  '安远',
+  '安义',
+  '安溪',
+  '安丘',
+  '安宁',
+  '安吉',
+  '安福',
+  '阿城',
+  '安阳',
+  '安顺',
+  '鞍山',
+  '安庆',
+  '安康',
+  '阿里',
+  '阿勒泰',
+  '阿拉善盟',
+  '阿克苏',
+  '阿坝'] },
+
+
+{
+  letter: 'B',
+  list: [
+  '北京',
+  '博兴',
+  '博罗',
+  '博爱',
+  '璧山',
+  '宾阳',
+  '宾县',
+  '滨海',
+  '巴彦',
+  '宝应',
+  '亳州',
+  '博尔塔拉',
+  '滨州',
+  '毕节',
+  '本溪',
+  '北海',
+  '巴中',
+  '巴音郭楞',
+  '巴彦淖尔',
+  '包头',
+  '保山',
+  '宝鸡',
+  '保定',
+  '蚌埠',
+  '白银',
+  '白山',
+  '百色',
+  '白城'] },
+
+
+{
+  letter: 'C',
+  list: [
+  '成都',
+  '常州',
+  '长沙',
+  '长春',
+  '重庆',
+  '朝阳',
+  '巢湖',
+  '长治',
+  '昌吉',
+  '昌都',
+  '常德',
+  '沧州',
+  '郴州',
+  '承德',
+  '潮州',
+  '滁州',
+  '楚雄',
+  '崇左',
+  '池州',
+  '赤峰',
+  '枞阳',
+  '从化',
+  '慈溪',
+  '淳安',
+  '崇州',
+  '崇义',
+  '崇仁',
+  '茌平',
+  '成武',
+  '城口',
+  '呈贡',
+  '潮安',
+  '昌邑',
+  '长兴',
+  '长汀',
+  '长泰',
+  '常熟',
+  '常山',
+  '昌乐',
+  '长乐',
+  '长海',
+  '长丰',
+  '长岛',
+  '曹县',
+  '苍山',
+  '苍南'] },
+
+
+{
+  letter: 'D',
+  list: [
+  '丹东',
+  '大理',
+  '东莞',
+  '大连',
+  '大兴安岭',
+  '大同',
+  '大庆',
+  '德州',
+  '德阳',
+  '德宏',
+  '达州',
+  '大丰',
+  '东营',
+  '迪庆',
+  '定西',
+  '单县',
+  '当涂',
+  '砀山',
+  '岱山',
+  '大邑',
+  '大田',
+  '大埔',
+  '丹阳',
+  '德化',
+  '德安',
+  '大足',
+  '大余',
+  '德庆',
+  '德清',
+  '登封',
+  '德惠',
+  '定南',
+  '垫江',
+  '电白',
+  '德兴',
+  '东海',
+  '东阿',
+  '定远',
+  '定陶',
+  '东台',
+  '东山',
+  '东平',
+  '东明',
+  '东源',
+  '东阳',
+  '东乡',
+  '洞头',
+  '都江堰',
+  '都昌',
+  '东至'] },
+
+
+{
+  letter: 'E',
+  list: ['鄂尔多斯', '恩施', '恩平', '鄂州'] },
+
+{
+  letter: 'F',
+  list: [
+  '佛山',
+  '福州',
+  '防城港',
+  '抚顺',
+  '阜新',
+  '阜阳',
+  '抚州',
+  '法库',
+  '富阳',
+  '福清',
+  '阜宁',
+  '阜南',
+  '富民',
+  '浮梁',
+  '福鼎',
+  '福安',
+  '佛冈',
+  '分宜',
+  '凤阳',
+  '奉新',
+  '丰县',
+  '凤台',
+  '丰顺',
+  '封开',
+  '奉节',
+  '奉化',
+  '丰都',
+  '丰城',
+  '费县',
+  '肥西',
+  '肥东',
+  '肥城',
+  '方正',
+  '繁昌'] },
+
+
+{
+  letter: 'G',
+  list: [
+  '广州',
+  '贵阳',
+  '甘南',
+  '赣州',
+  '甘孜',
+  '广安',
+  '广元',
+  '贵港',
+  '桂林',
+  '果洛',
+  '固原',
+  '赣县',
+  '赣榆',
+  '高安',
+  '固镇',
+  '古田',
+  '贵溪',
+  '灌云',
+  '冠县',
+  '灌南',
+  '光泽',
+  '广饶',
+  '广宁',
+  '广丰',
+  '广德',
+  '广昌',
+  '巩义',
+  '高州',
+  '高邮',
+  '高邑',
+  '高要',
+  '高唐',
+  '高青',
+  '高密',
+  '高陵',
+  '皋兰',
+  '高淳',
+  '藁城'] },
+
+
+{
+  letter: 'H',
+  list: [
+  '杭州',
+  '哈尔滨',
+  '邯郸',
+  '海口',
+  '黑河',
+  '合肥',
+  '鹤岗',
+  '河池',
+  '鹤壁',
+  '汉中',
+  '哈密',
+  '海西',
+  '海南',
+  '海东',
+  '海北',
+  '惠州',
+  '呼伦贝尔',
+  '葫芦岛',
+  '呼和浩特',
+  '黄石',
+  '黄山',
+  '黄南',
+  '黄冈',
+  '淮南',
+  '怀化',
+  '淮北',
+  '淮安',
+  '红河',
+  '贺州',
+  '菏泽',
+  '河源',
+  '和田地',
+  '衡阳',
+  '衡水',
+  '怀远',
+  '怀宁',
+  '怀集',
+  '桦甸',
+  '华安',
+  '洪泽',
+  '和县',
+  '鹤山',
+  '和平',
+  '横县',
+  '横峰',
+  '合川',
+  '含山',
+  '海阳',
+  '海盐',
+  '海宁',
+  '海门',
+  '海丰',
+  '海安',
+  '湖州',
+  '户县',
+  '霍山',
+  '霍邱',
+  '呼兰',
+  '湖口',
+  '惠民',
+  '惠来',
+  '惠东',
+  '会昌',
+  '惠安',
+  '化州',
+  '桓台'] },
+
+
+{
+  letter: 'J',
+  list: [
+  '鸡西',
+  '酒泉',
+  '九江',
+  '锦州',
+  '晋中',
+  '济宁',
+  '金华',
+  '荆州',
+  '荆门',
+  '景德镇',
+  '晋城',
+  '金昌',
+  '揭阳',
+  '嘉峪关',
+  '吉安',
+  '江门',
+  '佳木斯',
+  '济南',
+  '吉林',
+  '嘉兴',
+  '焦作',
+  '井冈山',
+  '旌德',
+  '靖安',
+  '即墨',
+  '揭西',
+  '界首',
+  '揭东',
+  '嘉祥',
+  '嘉善',
+  '胶州',
+  '胶南',
+  '蕉岭',
+  '蛟河',
+  '吉安',
+  '建阳',
+  '建瓯',
+  '建宁',
+  '建湖',
+  '江阴',
+  '姜堰',
+  '江山',
+  '将乐',
+  '江津',
+  '江都',
+  '建德',
+  '九台',
+  '九江',
+  '吉水',
+  '晋州',
+  '金寨',
+  '缙云',
+  '金乡',
+  '金溪',
+  '进贤',
+  '金堂',
+  '金坛',
+  '晋宁',
+  '金门',
+  '晋江',
+  '金湖',
+  '井陉',
+  '泾县',
+  '景宁',
+  '靖江',
+  '巨野',
+  '莒县',
+  '句容',
+  '莒南',
+  '鄄城',
+  '济源',
+  '济阳',
+  '绩溪'] },
+
+
+{
+  letter: 'K',
+  list: [
+  '昆明',
+  '开封',
+  '喀什地',
+  '克拉玛依',
+  '克孜勒',
+  '开化',
+  '开平',
+  '开县',
+  '开阳',
+  '康平',
+  '垦利',
+  '昆山'] },
+
+
+{
+  letter: 'L',
+  list: [
+  '连云港',
+  '凉山',
+  '乐山',
+  '拉萨',
+  '廊坊',
+  '莱芜',
+  '来宾',
+  '洛阳',
+  '柳州',
+  '兰州',
+  '六盘水',
+  '六安',
+  '丽水',
+  '林芝',
+  '临沂',
+  '临夏',
+  '临汾',
+  '临沧',
+  '丽江',
+  '辽源',
+  '辽阳',
+  '聊城',
+  '乐亭',
+  '乐清',
+  '乐平',
+  '乐陵',
+  '雷州',
+  '乐昌',
+  '乐安',
+  '兰溪',
+  '蓝田',
+  '郎溪',
+  '莱州',
+  '莱阳',
+  '莱西',
+  '来安',
+  '吕梁',
+  '泸州',
+  '漯河',
+  '娄底',
+  '龙岩',
+  '陇南',
+  '临邑',
+  '临沭',
+  '临朐',
+  '临泉',
+  '临清',
+  '临海',
+  '陵县',
+  '灵寿',
+  '灵璧',
+  '临安',
+  '利津',
+  '黎川',
+  '辽中',
+  '连州',
+  '涟水',
+  '连山',
+  '连平',
+  '连南',
+  '廉江',
+  '连江',
+  '莲花',
+  '梁山',
+  '梁平',
+  '连城',
+  '鹿寨',
+  '芦溪',
+  '禄劝',
+  '鹿泉',
+  '罗源',
+  '洛宁',
+  '罗定',
+  '庐江',
+  '陆河',
+  '陆丰',
+  '滦县',
+  '滦南',
+  '栾川',
+  '栾城',
+  '龙游',
+  '龙泉',
+  '龙南',
+  '龙门',
+  '龙口',
+  '龙海',
+  '龙川',
+  '隆安',
+  '溧阳',
+  '利辛',
+  '浏阳',
+  '柳江',
+  '柳城',
+  '溧水'] },
+
+
+{
+  letter: 'M',
+  list: [
+  '马鞍山',
+  '茂名',
+  '眉山',
+  '梅州',
+  '绵阳',
+  '牡丹江',
+  '马山',
+  '梅县',
+  '蒙城',
+  '孟津',
+  '蒙阴',
+  '孟州',
+  '明光',
+  '明溪',
+  '闽侯',
+  '闽清',
+  '木兰'] },
+
+
+{
+  letter: 'N',
+  list: [
+  '南昌',
+  '南京',
+  '南宁',
+  '南通',
+  '宁波',
+  '南充',
+  '南平',
+  '南阳',
+  '那曲',
+  '内江',
+  '宁德',
+  '怒江',
+  '南安',
+  '南澳',
+  '南城',
+  '南川',
+  '南丰',
+  '南靖',
+  '南康',
+  '南陵',
+  '南雄',
+  '宁都',
+  '宁国',
+  '宁海',
+  '宁化',
+  '宁津',
+  '宁乡',
+  '宁阳',
+  '农安'] },
+
+
+{
+  letter: 'P',
+  list: [
+  '盘锦',
+  '攀枝花',
+  '平顶山',
+  '平凉',
+  '萍乡',
+  '普洱',
+  '莆田',
+  '濮阳',
+  '磐安',
+  '磐石',
+  '沛县',
+  '蓬莱',
+  '彭水',
+  '彭泽',
+  '彭州',
+  '平度',
+  '平和',
+  '平湖',
+  '屏南',
+  '平山',
+  '平潭',
+  '平阳',
+  '平阴',
+  '平邑',
+  '平原',
+  '平远',
+  '郫县',
+  '邳州',
+  '鄱阳',
+  '浦城',
+  '浦江',
+  '蒲江',
+  '普兰店',
+  '普宁'] },
+
+
+{
+  letter: 'Q',
+  list: [
+  '青岛',
+  '泉州',
+  '黔东',
+  '黔南',
+  '黔西南',
+  '庆阳',
+  '清远',
+  '秦皇岛',
+  '钦州',
+  '齐齐哈尔',
+  '七台河',
+  '曲靖',
+  '衢州',
+  '迁安',
+  '潜山',
+  '铅山',
+  '迁西',
+  '启东',
+  '齐河',
+  '綦江',
+  '祁门',
+  '清流',
+  '青田',
+  '清新',
+  '青阳',
+  '庆元',
+  '庆云',
+  '清镇',
+  '青州',
+  '沁阳',
+  '邛崃',
+  '栖霞',
+  '全椒',
+  '曲江',
+  '曲阜',
+  '全南'] },
+
+
+{
+  letter: 'R',
+  list: [
+  '日喀则',
+  '日照',
+  '饶平',
+  '仁化',
+  '融安',
+  '荣昌',
+  '荣成',
+  '融水',
+  '如东',
+  '如皋',
+  '瑞安',
+  '瑞昌',
+  '瑞金',
+  '乳山',
+  '汝阳',
+  '乳源'] },
+
+
+{
+  letter: 'S',
+  list: [
+  '上海',
+  '沈阳',
+  '深圳',
+  '石家庄',
+  '苏州',
+  '三门峡',
+  '三明',
+  '三亚',
+  '商丘',
+  '商洛',
+  '上饶',
+  '汕尾',
+  '汕头',
+  '绍兴',
+  '韶关',
+  '山南',
+  '邵阳',
+  '十堰',
+  '双鸭山',
+  '石嘴山',
+  '绥化',
+  '松原',
+  '四平',
+  '朔州',
+  '泗阳',
+  '泗县',
+  '泗水',
+  '四会',
+  '泗洪',
+  '沭阳',
+  '顺昌',
+  '舒兰',
+  '舒城',
+  '双流',
+  '双城',
+  '寿县',
+  '寿宁',
+  '寿光',
+  '石柱',
+  '始兴',
+  '石台',
+  '石狮',
+  '石林',
+  '石城',
+  '射阳',
+  '歙县',
+  '深泽',
+  '莘县',
+  '嵊州',
+  '嵊泗',
+  '沙县',
+  '绍兴',
+  '邵武',
+  '尚志',
+  '上虞',
+  '上犹',
+  '上饶',
+  '上林',
+  '上栗',
+  '商河',
+  '上杭',
+  '上高',
+  '诏安',
+  '三门',
+  '三江',
+  '松阳',
+  '嵩县',
+  '松溪',
+  '嵩明',
+  '宿州',
+  '宿迁',
+  '随州',
+  '遂宁',
+  '宿松',
+  '遂溪',
+  '濉溪',
+  '睢宁',
+  '遂川',
+  '遂昌',
+  '宿豫'] },
+
+
+{
+  letter: 'T',
+  list: [
+  '天津',
+  '台州',
+  '唐山',
+  '塔城地',
+  '泰安',
+  '太原',
+  '泰州',
+  '天水',
+  '铁岭',
+  '铜川',
+  '通化',
+  '通辽',
+  '铜陵',
+  '铜仁',
+  '通州',
+  '桐乡',
+  '铜山',
+  '潼南',
+  '桐庐',
+  '铜陵',
+  '铜梁',
+  '通河',
+  '铜鼓',
+  '桐城',
+  '天台',
+  '天长',
+  '滕州',
+  '唐海',
+  '郯城',
+  '泰兴',
+  '泰顺',
+  '台山',
+  '泰宁',
+  '太湖',
+  '泰和',
+  '太和',
+  '太仓',
+  '吐鲁番'] },
+
+
+{
+  letter: 'W',
+  list: [
+  '潍坊',
+  '威海',
+  '武汉',
+  '无锡',
+  '渭南',
+  '文山',
+  '温州',
+  '乌海',
+  '芜湖',
+  '乌兰察布',
+  '乌鲁木齐',
+  '武威',
+  '吴忠',
+  '武陟',
+  '婺源',
+  '武夷山',
+  '武义',
+  '巫溪',
+  '无为',
+  '巫山',
+  '武平',
+  '武宁',
+  '武鸣',
+  '武隆',
+  '五莲',
+  '吴江',
+  '无极',
+  '五华',
+  '芜湖',
+  '五河',
+  '无棣',
+  '吴川',
+  '武城',
+  '五常',
+  '涡阳',
+  '温县',
+  '汶上',
+  '温岭',
+  '翁源',
+  '文登',
+  '文成',
+  '微山',
+  '万载',
+  '万年',
+  '望江',
+  '望城',
+  '万安',
+  '瓦房店',
+  '梧州'] },
+
+
+{
+  letter: 'X',
+  list: [
+  '厦门',
+  '西安',
+  '许昌',
+  '徐州',
+  '襄樊',
+  '湘潭',
+  '湘西',
+  '咸宁',
+  '咸阳',
+  '孝感',
+  '锡林郭勒盟',
+  '兴安盟',
+  '邢台',
+  '西宁',
+  '新乡',
+  '信阳',
+  '新余',
+  '忻州',
+  '西双版纳',
+  '宣城',
+  '峡江',
+  '夏津',
+  '象山',
+  '响水',
+  '仙居',
+  '仙游',
+  '萧县',
+  '霞浦',
+  '息烽',
+  '新安',
+  '新昌',
+  '信丰',
+  '新丰',
+  '新干',
+  '兴国',
+  '兴化',
+  '兴宁',
+  '行唐',
+  '荥阳',
+  '星子',
+  '辛集',
+  '新建',
+  '新津',
+  '新乐',
+  '新民',
+  '新密',
+  '新泰',
+  '新兴',
+  '新沂',
+  '信宜',
+  '新郑',
+  '休宁',
+  '秀山',
+  '修水',
+  '修文',
+  '修武',
+  '寻甸',
+  '盱眙',
+  '徐闻',
+  '寻乌'] },
+
+
+{
+  letter: 'Y',
+  list: [
+  '扬州',
+  '烟台',
+  '雅安',
+  '延安',
+  '延边',
+  '盐城',
+  '阳江',
+  '阳泉',
+  '宜宾',
+  '宜昌',
+  '伊春',
+  '宜春',
+  '伊犁哈萨克',
+  '银川',
+  '营口',
+  '鹰潭',
+  '益阳',
+  '永州',
+  '岳阳',
+  '玉林',
+  '榆林',
+  '运城',
+  '云浮',
+  '玉树',
+  '玉溪',
+  '阳春',
+  '阳东',
+  '阳谷',
+  '阳山',
+  '阳信',
+  '阳西',
+  '扬中',
+  '偃师',
+  '延寿',
+  '兖州',
+  '伊川',
+  '宜丰',
+  '宜黄',
+  '依兰',
+  '宜良',
+  '沂南',
+  '英德',
+  '颍上',
+  '沂水',
+  '义乌',
+  '黟县',
+  '宜兴',
+  '弋阳',
+  '宜阳',
+  '沂源',
+  '仪征',
+  '永安',
+  '永川',
+  '永春',
+  '永登',
+  '永定',
+  '永丰',
+  '永吉',
+  '永嘉',
+  '永康',
+  '邕宁',
+  '永泰',
+  '永新',
+  '永修',
+  '尤溪',
+  '酉阳',
+  '元氏',
+  '禹城',
+  '于都',
+  '岳西',
+  '余干',
+  '玉环',
+  '余江',
+  '郁南',
+  '云安',
+  '郓城',
+  '云和',
+  '云霄',
+  '云阳',
+  '玉山',
+  '榆树',
+  '鱼台',
+  '玉田',
+  '余姚',
+  '榆中'] },
+
+
+{
+  letter: 'Z',
+  list: [
+  '漳州',
+  '遵化',
+  '郑州',
+  '中山',
+  '珠海',
+  '枣庄',
+  '张家界',
+  '张家口',
+  '张掖',
+  '湛江',
+  '肇庆',
+  '昭通',
+  '镇江',
+  '中卫',
+  '周口',
+  '舟山',
+  '驻马店',
+  '株洲',
+  '淄博',
+  '自贡',
+  '资阳',
+  '遵义',
+  '赞皇',
+  '增城',
+  '张家港',
+  '漳平',
+  '漳浦',
+  '章丘',
+  '樟树',
+  '沾化',
+  '赵县',
+  '招远',
+  '正定',
+  '政和',
+  '柘荣',
+  '中牟',
+  '忠县',
+  '周宁',
+  '周至',
+  '庄河',
+  '诸城',
+  '诸暨',
+  '紫金',
+  '资溪',
+  '邹城',
+  '邹平'] }];var _default =
+
+
+
+
+cityData;exports.default = _default;
+
+/***/ }),
+
+/***/ 53:
+/*!***********************************************!*\
+  !*** ./node_modules/path-browserify/index.js ***!
+  \***********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(process) {// .dirname, .basename, and .extname methods are extracted from Node.js v8.11.1,
+// backported and transplited with Babel, with backwards-compat fixes
+
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+// resolves . and .. elements in a path array with directory names there
+// must be no slashes, empty elements, or device names (c:\) in the array
+// (so also no leading and trailing slashes - it does not distinguish
+// relative and absolute paths)
+function normalizeArray(parts, allowAboveRoot) {
+  // if the path tries to go above the root, `up` ends up > 0
+  var up = 0;
+  for (var i = parts.length - 1; i >= 0; i--) {
+    var last = parts[i];
+    if (last === '.') {
+      parts.splice(i, 1);
+    } else if (last === '..') {
+      parts.splice(i, 1);
+      up++;
+    } else if (up) {
+      parts.splice(i, 1);
+      up--;
+    }
+  }
+
+  // if the path is allowed to go above the root, restore leading ..s
+  if (allowAboveRoot) {
+    for (; up--; up) {
+      parts.unshift('..');
+    }
+  }
+
+  return parts;
+}
+
+// path.resolve([from ...], to)
+// posix version
+exports.resolve = function() {
+  var resolvedPath = '',
+      resolvedAbsolute = false;
+
+  for (var i = arguments.length - 1; i >= -1 && !resolvedAbsolute; i--) {
+    var path = (i >= 0) ? arguments[i] : process.cwd();
+
+    // Skip empty and invalid entries
+    if (typeof path !== 'string') {
+      throw new TypeError('Arguments to path.resolve must be strings');
+    } else if (!path) {
+      continue;
+    }
+
+    resolvedPath = path + '/' + resolvedPath;
+    resolvedAbsolute = path.charAt(0) === '/';
+  }
+
+  // At this point the path should be resolved to a full absolute path, but
+  // handle relative paths to be safe (might happen when process.cwd() fails)
+
+  // Normalize the path
+  resolvedPath = normalizeArray(filter(resolvedPath.split('/'), function(p) {
+    return !!p;
+  }), !resolvedAbsolute).join('/');
+
+  return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
+};
+
+// path.normalize(path)
+// posix version
+exports.normalize = function(path) {
+  var isAbsolute = exports.isAbsolute(path),
+      trailingSlash = substr(path, -1) === '/';
+
+  // Normalize the path
+  path = normalizeArray(filter(path.split('/'), function(p) {
+    return !!p;
+  }), !isAbsolute).join('/');
+
+  if (!path && !isAbsolute) {
+    path = '.';
+  }
+  if (path && trailingSlash) {
+    path += '/';
+  }
+
+  return (isAbsolute ? '/' : '') + path;
+};
+
+// posix version
+exports.isAbsolute = function(path) {
+  return path.charAt(0) === '/';
+};
+
+// posix version
+exports.join = function() {
+  var paths = Array.prototype.slice.call(arguments, 0);
+  return exports.normalize(filter(paths, function(p, index) {
+    if (typeof p !== 'string') {
+      throw new TypeError('Arguments to path.join must be strings');
+    }
+    return p;
+  }).join('/'));
+};
+
+
+// path.relative(from, to)
+// posix version
+exports.relative = function(from, to) {
+  from = exports.resolve(from).substr(1);
+  to = exports.resolve(to).substr(1);
+
+  function trim(arr) {
+    var start = 0;
+    for (; start < arr.length; start++) {
+      if (arr[start] !== '') break;
+    }
+
+    var end = arr.length - 1;
+    for (; end >= 0; end--) {
+      if (arr[end] !== '') break;
+    }
+
+    if (start > end) return [];
+    return arr.slice(start, end - start + 1);
+  }
+
+  var fromParts = trim(from.split('/'));
+  var toParts = trim(to.split('/'));
+
+  var length = Math.min(fromParts.length, toParts.length);
+  var samePartsLength = length;
+  for (var i = 0; i < length; i++) {
+    if (fromParts[i] !== toParts[i]) {
+      samePartsLength = i;
+      break;
+    }
+  }
+
+  var outputParts = [];
+  for (var i = samePartsLength; i < fromParts.length; i++) {
+    outputParts.push('..');
+  }
+
+  outputParts = outputParts.concat(toParts.slice(samePartsLength));
+
+  return outputParts.join('/');
+};
+
+exports.sep = '/';
+exports.delimiter = ':';
+
+exports.dirname = function (path) {
+  if (typeof path !== 'string') path = path + '';
+  if (path.length === 0) return '.';
+  var code = path.charCodeAt(0);
+  var hasRoot = code === 47 /*/*/;
+  var end = -1;
+  var matchedSlash = true;
+  for (var i = path.length - 1; i >= 1; --i) {
+    code = path.charCodeAt(i);
+    if (code === 47 /*/*/) {
+        if (!matchedSlash) {
+          end = i;
+          break;
+        }
+      } else {
+      // We saw the first non-path separator
+      matchedSlash = false;
+    }
+  }
+
+  if (end === -1) return hasRoot ? '/' : '.';
+  if (hasRoot && end === 1) {
+    // return '//';
+    // Backwards-compat fix:
+    return '/';
+  }
+  return path.slice(0, end);
+};
+
+function basename(path) {
+  if (typeof path !== 'string') path = path + '';
+
+  var start = 0;
+  var end = -1;
+  var matchedSlash = true;
+  var i;
+
+  for (i = path.length - 1; i >= 0; --i) {
+    if (path.charCodeAt(i) === 47 /*/*/) {
+        // If we reached a path separator that was not part of a set of path
+        // separators at the end of the string, stop now
+        if (!matchedSlash) {
+          start = i + 1;
+          break;
+        }
+      } else if (end === -1) {
+      // We saw the first non-path separator, mark this as the end of our
+      // path component
+      matchedSlash = false;
+      end = i + 1;
+    }
+  }
+
+  if (end === -1) return '';
+  return path.slice(start, end);
+}
+
+// Uses a mixed approach for backwards-compatibility, as ext behavior changed
+// in new Node.js versions, so only basename() above is backported here
+exports.basename = function (path, ext) {
+  var f = basename(path);
+  if (ext && f.substr(-1 * ext.length) === ext) {
+    f = f.substr(0, f.length - ext.length);
+  }
+  return f;
+};
+
+exports.extname = function (path) {
+  if (typeof path !== 'string') path = path + '';
+  var startDot = -1;
+  var startPart = 0;
+  var end = -1;
+  var matchedSlash = true;
+  // Track the state of characters (if any) we see before our first dot and
+  // after any path separator we find
+  var preDotState = 0;
+  for (var i = path.length - 1; i >= 0; --i) {
+    var code = path.charCodeAt(i);
+    if (code === 47 /*/*/) {
+        // If we reached a path separator that was not part of a set of path
+        // separators at the end of the string, stop now
+        if (!matchedSlash) {
+          startPart = i + 1;
+          break;
+        }
+        continue;
+      }
+    if (end === -1) {
+      // We saw the first non-path separator, mark this as the end of our
+      // extension
+      matchedSlash = false;
+      end = i + 1;
+    }
+    if (code === 46 /*.*/) {
+        // If this is our first dot, mark it as the start of our extension
+        if (startDot === -1)
+          startDot = i;
+        else if (preDotState !== 1)
+          preDotState = 1;
+    } else if (startDot !== -1) {
+      // We saw a non-dot and non-path separator before our dot, so we should
+      // have a good chance at having a non-empty extension
+      preDotState = -1;
+    }
+  }
+
+  if (startDot === -1 || end === -1 ||
+      // We saw a non-dot character immediately before the dot
+      preDotState === 0 ||
+      // The (right-most) trimmed path component is exactly '..'
+      preDotState === 1 && startDot === end - 1 && startDot === startPart + 1) {
+    return '';
+  }
+  return path.slice(startDot, end);
+};
+
+function filter (xs, f) {
+    if (xs.filter) return xs.filter(f);
+    var res = [];
+    for (var i = 0; i < xs.length; i++) {
+        if (f(xs[i], i, xs)) res.push(xs[i]);
+    }
+    return res;
+}
+
+// String.prototype.substr - negative index don't work in IE8
+var substr = 'ab'.substr(-1) === 'b'
+    ? function (str, start, len) { return str.substr(start, len) }
+    : function (str, start, len) {
+        if (start < 0) start = str.length + start;
+        return str.substr(start, len);
+    }
+;
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../node-libs-browser/mock/process.js */ 52)))
+
+/***/ }),
+
+/***/ 536:
+/*!***************************************************************************************!*\
+  !*** C:/Users/Administrator/Desktop/zhaopin/components/lh-select-city/countryList.js ***!
+  \***************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var countryData = [
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "斯瓦尔巴群岛和扬马延岛",
+  "country_code": "SJ",
+  "country_name": "Svalbard & Jan Mayen" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "荷兰加勒比区",
+  "country_code": "BQ",
+  "country_name": "Caribbean Netherlands" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "蒙塞拉特岛",
+  "country_code": "MS",
+  "country_name": "Montserrat" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "西撒哈拉",
+  "country_code": "EH",
+  "country_name": "Western Sahara" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "不丹",
+  "country_code": "BT",
+  "country_name": "Bhutan" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "东帝汶",
+  "country_code": "TL",
+  "country_name": "Timor-Leste (East Timor)" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "中国",
+  "country_code": "CN",
+  "country_name": "China" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "乌兹别克斯坦",
+  "country_code": "UZ",
+  "country_name": "Uzbekistan" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "也门",
+  "country_code": "YE",
+  "country_name": "Yemen" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "亚美尼亚",
+  "country_code": "AM",
+  "country_name": "Armenia" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "以色列",
+  "country_code": "IL",
+  "country_name": "Israel" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "伊拉克",
+  "country_code": "IQ",
+  "country_name": "Iraq" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "伊朗",
+  "country_code": "IR",
+  "country_name": "Iran" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "卡塔尔",
+  "country_code": "QA",
+  "country_name": "Qatar" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "印尼",
+  "country_code": "ID",
+  "country_name": "Indonesia" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "印度",
+  "country_code": "IN",
+  "country_name": "India" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "叙利亚",
+  "country_code": "SY",
+  "country_name": "Syria" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "中国台湾",
+  "country_code": "TW",
+  "country_name": "Taiwan" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "吉尔吉斯斯坦",
+  "country_code": "KG",
+  "country_name": "Kyrgyzstan" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "哈萨克斯坦",
+  "country_code": "KZ",
+  "country_name": "Kazakhstan" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "土库曼斯坦",
+  "country_code": "TM",
+  "country_name": "Turkmenistan" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "土耳其",
+  "country_code": "TR",
+  "country_name": "Turkey" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "圣诞岛",
+  "country_code": "CX",
+  "country_name": "Christmas Island" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "塔吉克斯坦",
+  "country_code": "TJ",
+  "country_name": "Tajikistan" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "塞浦路斯",
+  "country_code": "CY",
+  "country_name": "Cyprus" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "孟加拉",
+  "country_code": "BD",
+  "country_name": "Bangladesh" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "尼泊尔",
+  "country_code": "NP",
+  "country_name": "Nepal" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "巴勒斯坦",
+  "country_code": "PS",
+  "country_name": "Palestinian territories" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "巴基斯坦",
+  "country_code": "PK",
+  "country_name": "Pakistan" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "巴林",
+  "country_code": "BH",
+  "country_name": "Bahrain" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "文莱",
+  "country_code": "BN",
+  "country_name": "Brunei" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "斯里兰卡",
+  "country_code": "LK",
+  "country_name": "Sri Lanka" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "新加坡",
+  "country_code": "SG",
+  "country_name": "Singapore" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "日本",
+  "country_code": "JP",
+  "country_name": "Japan" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "朝鲜",
+  "country_code": "KP",
+  "country_name": "North Korea" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "柬埔寨",
+  "country_code": "KH",
+  "country_name": "Cambodia" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "格鲁吉亚",
+  "country_code": "GE",
+  "country_name": "Georgia" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "沙特阿拉伯",
+  "country_code": "SA",
+  "country_name": "Saudi Arabia" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "泰国",
+  "country_code": "TH",
+  "country_name": "Thailand" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "中国澳门",
+  "country_code": "MO",
+  "country_name": "Macao" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "科威特",
+  "country_code": "KW",
+  "country_name": "Kuwait" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "科科斯群岛",
+  "country_code": "CC",
+  "country_name": "Cocos (Keeling) Islands" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "约旦",
+  "country_code": "JO",
+  "country_name": "Jordan" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "缅甸",
+  "country_code": "MM",
+  "country_name": "Myanmar (Burma)" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "老挝",
+  "country_code": "LA",
+  "country_name": "Laos" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "菲律宾",
+  "country_code": "PH",
+  "country_name": "The Philippines" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "蒙古国",
+  "country_code": "MN",
+  "country_name": "Mongolia" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "越南",
+  "country_code": "VN",
+  "country_name": "Vietnam" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "阿塞拜疆",
+  "country_code": "AZ",
+  "country_name": "Azerbaijan" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "阿富汗",
+  "country_code": "AF",
+  "country_name": "Afghanistan" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "阿曼",
+  "country_code": "OM",
+  "country_name": "Oman" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "阿根廷",
+  "country_code": "AR",
+  "country_name": "Argentina" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "阿联酋",
+  "country_code": "AE",
+  "country_name": "United Arab Emirates" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "韩国",
+  "country_code": "KR",
+  "country_name": "South Korea" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "中国香港",
+  "country_code": "HK",
+  "country_name": "Hong Kong" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "马尔代夫",
+  "country_code": "MV",
+  "country_name": "Maldives" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "马来西亚",
+  "country_code": "MY",
+  "country_name": "Malaysia" },
+
+{
+  "continent_cname": "亚洲",
+  "continent_name": "AS",
+  "country_cname": "黎巴嫩",
+  "country_code": "LB",
+  "country_name": "Lebanon" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "伯利兹",
+  "country_code": "BZ",
+  "country_name": "Belize" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "加拿大",
+  "country_code": "CA",
+  "country_name": "Canada" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "危地马拉",
+  "country_code": "GT",
+  "country_name": "Guatemala" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "古巴",
+  "country_code": "CU",
+  "country_name": "Cuba" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "哥斯达黎加",
+  "country_code": "CR",
+  "country_name": "Costa Rica" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "圣卢西亚",
+  "country_code": "LC",
+  "country_name": "St. Lucia" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "圣基茨和尼维斯",
+  "country_code": "KN",
+  "country_name": "St. Kitts & Nevis" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "圣巴泰勒米岛",
+  "country_code": "BL",
+  "country_name": "Saint Barthélemy" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "圣文森特和格林纳丁斯",
+  "country_code": "VC",
+  "country_name": "St. Vincent & the Grenadines" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "圣皮埃尔和密克隆",
+  "country_code": "PM",
+  "country_name": "Saint-Pierre & Miquelon" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "墨西哥",
+  "country_code": "MX",
+  "country_name": "Mexico" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "多米尼克",
+  "country_code": "DM",
+  "country_name": "Dominica" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "多米尼加",
+  "country_code": "DO",
+  "country_name": "Dominican Republic" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "安圭拉",
+  "country_code": "AI",
+  "country_name": "Anguilla" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "安提瓜和巴布达",
+  "country_code": "AG",
+  "country_name": "Antigua & Barbuda" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "尼加拉瓜",
+  "country_code": "NI",
+  "country_name": "Nicaragua" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "巴哈马",
+  "country_code": "BS",
+  "country_name": "The Bahamas" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "巴巴多斯",
+  "country_code": "BB",
+  "country_name": "Barbados" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "巴拿马",
+  "country_code": "PA",
+  "country_name": "Panama" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "库拉索",
+  "country_code": "CW",
+  "country_name": "Curacao" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "开曼群岛",
+  "country_code": "KY",
+  "country_name": "Cayman Islands" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "格林纳达",
+  "country_code": "GD",
+  "country_name": "Grenada" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "格陵兰",
+  "country_code": "GL",
+  "country_name": "Greenland" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "法属圣马丁",
+  "country_code": "MF",
+  "country_name": "Saint Martin (France)" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "波多黎各",
+  "country_code": "PR",
+  "country_name": "Puerto Rico" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "洪都拉斯",
+  "country_code": "HN",
+  "country_name": "Honduras" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "海地",
+  "country_code": "HT",
+  "country_name": "Haiti" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "牙买加",
+  "country_code": "JM",
+  "country_name": "Jamaica" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "特克斯和凯科斯群岛",
+  "country_code": "TC",
+  "country_name": "Turks & Caicos Islands" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "特立尼达和多巴哥",
+  "country_code": "TT",
+  "country_name": "Trinidad & Tobago" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "瓜德罗普",
+  "country_code": "GP",
+  "country_name": "Guadeloupe" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "百慕大",
+  "country_code": "BM",
+  "country_name": "Bermuda" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "美国",
+  "country_code": "US",
+  "country_name": "United States of America (USA)" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "美国本土外小岛屿",
+  "country_code": "UM",
+  "country_name": "United States Minor Outlying Islands" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "美属维尔京群岛",
+  "country_code": "VI",
+  "country_name": "United States Virgin Islands" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "英属维尔京群岛",
+  "country_code": "VG",
+  "country_name": "British Virgin Islands" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "荷属圣马丁",
+  "country_code": "SX",
+  "country_name": "Sint Maarten" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "萨尔瓦多",
+  "country_code": "SV",
+  "country_name": "El Salvador" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "阿鲁巴",
+  "country_code": "AW",
+  "country_name": "Aruba" },
+
+{
+  "continent_cname": "北美洲",
+  "continent_name": "NA",
+  "country_cname": "马提尼克",
+  "country_code": "MQ",
+  "country_name": "Martinique" },
+
+{
+  "continent_cname": "南极洲",
+  "continent_name": "AN",
+  "country_cname": "南乔治亚岛和南桑威奇群岛",
+  "country_code": "GS",
+  "country_name": "South Georgia & the South Sandwich Islands" },
+
+{
+  "continent_cname": "南极洲",
+  "continent_name": "AN",
+  "country_cname": "南极洲",
+  "country_code": "AQ",
+  "country_name": "Antarctica" },
+
+{
+  "continent_cname": "南极洲",
+  "continent_name": "AN",
+  "country_cname": "布韦岛",
+  "country_code": "BV",
+  "country_name": "Bouvet Island" },
+
+{
+  "continent_cname": "南极洲",
+  "continent_name": "AN",
+  "country_cname": "法属南部领地",
+  "country_code": "TF",
+  "country_name": "French Southern Territories" },
+
+{
+  "continent_cname": "南极洲",
+  "continent_name": "AN",
+  "country_cname": "赫德岛和麦克唐纳群岛",
+  "country_code": "HM",
+  "country_name": "Heard Island & McDonald Islands" },
+
+{
+  "continent_cname": "南美洲",
+  "continent_name": "SA",
+  "country_cname": "乌拉圭",
+  "country_code": "UY",
+  "country_name": "Uruguay" },
+
+{
+  "continent_cname": "南美洲",
+  "continent_name": "SA",
+  "country_cname": "厄瓜多尔",
+  "country_code": "EC",
+  "country_name": "Ecuador" },
+
+{
+  "continent_cname": "南美洲",
+  "continent_name": "SA",
+  "country_cname": "哥伦比亚",
+  "country_code": "CO",
+  "country_name": "Colombia" },
+
+{
+  "continent_cname": "南美洲",
+  "continent_name": "SA",
+  "country_cname": "圭亚那",
+  "country_code": "GY",
+  "country_name": "Guyana" },
+
+{
+  "continent_cname": "南美洲",
+  "continent_name": "SA",
+  "country_cname": "委内瑞拉",
+  "country_code": "VE",
+  "country_name": "Venezuela" },
+
+{
+  "continent_cname": "南美洲",
+  "continent_name": "SA",
+  "country_cname": "巴拉圭",
+  "country_code": "PY",
+  "country_name": "Paraguay" },
+
+{
+  "continent_cname": "南美洲",
+  "continent_name": "SA",
+  "country_cname": "巴西",
+  "country_code": "BR",
+  "country_name": "Brazil" },
+
+{
+  "continent_cname": "南美洲",
+  "continent_name": "SA",
+  "country_cname": "智利",
+  "country_code": "CL",
+  "country_name": "Chile" },
+
+{
+  "continent_cname": "南美洲",
+  "continent_name": "SA",
+  "country_cname": "法属圭亚那",
+  "country_code": "GF",
+  "country_name": "French Guiana" },
+
+{
+  "continent_cname": "南美洲",
+  "continent_name": "SA",
+  "country_cname": "玻利维亚",
+  "country_code": "BO",
+  "country_name": "Bolivia" },
+
+{
+  "continent_cname": "南美洲",
+  "continent_name": "SA",
+  "country_cname": "秘鲁",
+  "country_code": "PE",
+  "country_name": "Peru" },
+
+{
+  "continent_cname": "南美洲",
+  "continent_name": "SA",
+  "country_cname": "苏里南",
+  "country_code": "SR",
+  "country_name": "Suriname" },
+
+{
+  "continent_cname": "南美洲",
+  "continent_name": "SA",
+  "country_cname": "马尔维纳斯群岛(福克兰)",
+  "country_code": "FK",
+  "country_name": "Falkland Islands" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "关岛",
+  "country_code": "GU",
+  "country_name": "Guam" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "北马里亚纳群岛",
+  "country_code": "MP",
+  "country_name": "Northern Mariana Islands" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "图瓦卢",
+  "country_code": "TV",
+  "country_name": "Tuvalu" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "基里巴斯",
+  "country_code": "KI",
+  "country_name": "Kiribati" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "密克罗尼西亚联邦",
+  "country_code": "FM",
+  "country_name": "Federated States of Micronesia" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "巴布亚新几内亚",
+  "country_code": "PG",
+  "country_name": "Papua New Guinea" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "帕劳",
+  "country_code": "PW",
+  "country_name": "Palau" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "库克群岛",
+  "country_code": "CK",
+  "country_name": "Cook Islands" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "所罗门群岛",
+  "country_code": "SB",
+  "country_name": "Solomon Islands" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "托克劳",
+  "country_code": "TK",
+  "country_name": "Tokelau" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "斐济群岛",
+  "country_code": "FJ",
+  "country_name": "Fiji" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "新喀里多尼亚",
+  "country_code": "NC",
+  "country_name": "New Caledonia" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "新西兰",
+  "country_code": "NZ",
+  "country_name": "New Zealand" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "汤加",
+  "country_code": "TO",
+  "country_name": "Tonga" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "法属波利尼西亚",
+  "country_code": "PF",
+  "country_name": "French polynesia" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "澳大利亚",
+  "country_code": "AU",
+  "country_name": "Australia" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "瑙鲁",
+  "country_code": "NR",
+  "country_name": "Nauru" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "瓦利斯和富图纳",
+  "country_code": "WF",
+  "country_name": "Wallis & Futuna" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "瓦努阿图",
+  "country_code": "VU",
+  "country_name": "Vanuatu" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "皮特凯恩群岛",
+  "country_code": "PN",
+  "country_name": "Pitcairn Islands" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "纽埃",
+  "country_code": "NU",
+  "country_name": "Niue" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "美属萨摩亚",
+  "country_code": "AS",
+  "country_name": "American Samoa" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "萨摩亚",
+  "country_code": "WS",
+  "country_name": "Samoa" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "诺福克岛",
+  "country_code": "NF",
+  "country_name": "Norfolk Island" },
+
+{
+  "continent_cname": "大洋洲",
+  "continent_name": "OA",
+  "country_cname": "马绍尔群岛",
+  "country_code": "MH",
+  "country_name": "Marshall islands" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "丹麦",
+  "country_code": "DK",
+  "country_name": "Denmark" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "乌克兰",
+  "country_code": "UA",
+  "country_name": "Ukraine" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "俄罗斯",
+  "country_code": "RU",
+  "country_name": "Russian Federation" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "保加利亚",
+  "country_code": "BG",
+  "country_name": "Bulgaria" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "克罗地亚",
+  "country_code": "HR",
+  "country_name": "Croatia" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "冰岛",
+  "country_code": "IS",
+  "country_name": "Iceland" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "列支敦士登",
+  "country_code": "LI",
+  "country_name": "Liechtenstein" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "匈牙利",
+  "country_code": "HU",
+  "country_name": "Hungary" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "卢森堡",
+  "country_code": "LU",
+  "country_name": "Luxembourg" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "圣马力诺",
+  "country_code": "SM",
+  "country_name": "San Marino" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "塞尔维亚",
+  "country_code": "RS",
+  "country_name": "Serbia" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "奥兰群岛",
+  "country_code": "AX",
+  "country_name": "Aland Island" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "奥地利",
+  "country_code": "AT",
+  "country_name": "Austria" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "安道尔",
+  "country_code": "AD",
+  "country_name": "Andorra" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "希腊",
+  "country_code": "GR",
+  "country_name": "Greece" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "德国",
+  "country_code": "DE",
+  "country_name": "Germany" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "意大利",
+  "country_code": "IT",
+  "country_name": "Italy" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "拉脱维亚",
+  "country_code": "LV",
+  "country_name": "Latvia" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "挪威",
+  "country_code": "NO",
+  "country_name": "Norway" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "捷克",
+  "country_code": "CZ",
+  "country_name": "Czech Republic" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "摩尔多瓦",
+  "country_code": "MD",
+  "country_name": "Moldova" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "摩纳哥",
+  "country_code": "MC",
+  "country_name": "Monaco" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "斯洛伐克",
+  "country_code": "SK",
+  "country_name": "Slovakia" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "斯洛文尼亚",
+  "country_code": "SI",
+  "country_name": "Slovenia" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "根西岛",
+  "country_code": "GG",
+  "country_name": "Guernsey" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "梵蒂冈",
+  "country_code": "VA",
+  "country_name": "Vatican City (The Holy See)" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "比利时",
+  "country_code": "BE",
+  "country_name": "Belgium" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "法国",
+  "country_code": "FR",
+  "country_name": "France" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "法罗群岛",
+  "country_code": "FO",
+  "country_name": "Faroe Islands" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "波兰",
+  "country_code": "PL",
+  "country_name": "Poland" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "波黑",
+  "country_code": "BA",
+  "country_name": "Bosnia & Herzegovina" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "泽西岛",
+  "country_code": "JE",
+  "country_name": "Jersey" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "爱尔兰",
+  "country_code": "IE",
+  "country_name": "Ireland" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "爱沙尼亚",
+  "country_code": "EE",
+  "country_name": "Estonia" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "瑞典",
+  "country_code": "SE",
+  "country_name": "Sweden" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "瑞士",
+  "country_code": "CH",
+  "country_name": "Switzerland" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "白俄罗斯",
+  "country_code": "BY",
+  "country_name": "Belarus" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "直布罗陀",
+  "country_code": "GI",
+  "country_name": "Gibraltar" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "立陶宛",
+  "country_code": "LT",
+  "country_name": "Lithuania" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "罗马尼亚",
+  "country_code": "RO",
+  "country_name": "Romania" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "芬兰",
+  "country_code": "FI",
+  "country_name": "Finland" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "英国",
+  "country_code": "GB",
+  "country_name": "Great Britain (United Kingdom / England)" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "荷兰",
+  "country_code": "NL",
+  "country_name": "Netherlands" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "葡萄牙",
+  "country_code": "PT",
+  "country_name": "Portugal" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "西班牙",
+  "country_code": "ES",
+  "country_name": "Spain" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "阿尔巴尼亚",
+  "country_code": "AL",
+  "country_name": "Albania" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "马其顿",
+  "country_code": "MK",
+  "country_name": "Republic of Macedonia (FYROM)" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "马恩岛",
+  "country_code": "IM",
+  "country_name": "Isle of Man" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "马耳他",
+  "country_code": "MT",
+  "country_name": "Malta" },
+
+{
+  "continent_cname": "欧洲",
+  "continent_name": "EU",
+  "country_cname": "黑山",
+  "country_code": "ME",
+  "country_name": "Montenegro" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "中非",
+  "country_code": "CF",
+  "country_name": "Central African Republic" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "乌干达",
+  "country_code": "UG",
+  "country_name": "Uganda" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "乍得",
+  "country_code": "TD",
+  "country_name": "Chad" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "佛得角",
+  "country_code": "CV",
+  "country_name": "Cape Verde" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "冈比亚",
+  "country_code": "GM",
+  "country_name": "Gambia" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "几内亚",
+  "country_code": "GN",
+  "country_name": "Guinea" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "几内亚比绍",
+  "country_code": "GW",
+  "country_name": "Guinea-Bissau" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "刚果(布)",
+  "country_code": "CG",
+  "country_name": "Republic of the Congo" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "刚果(金)",
+  "country_code": "CD",
+  "country_name": "Democratic Republic of the Congo" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "利比亚",
+  "country_code": "LY",
+  "country_name": "Libya" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "利比里亚",
+  "country_code": "LR",
+  "country_name": "Liberia" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "加纳",
+  "country_code": "GH",
+  "country_name": "Ghana" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "加蓬",
+  "country_code": "GA",
+  "country_name": "Gabon" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "南苏丹",
+  "country_code": "SS",
+  "country_name": "South Sudan" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "南非",
+  "country_code": "ZA",
+  "country_name": "South Africa" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "博茨瓦纳",
+  "country_code": "BW",
+  "country_name": "Botswana" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "卢旺达",
+  "country_code": "RW",
+  "country_name": "Rwanda" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "厄立特里亚",
+  "country_code": "ER",
+  "country_name": "Eritrea" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "吉布提",
+  "country_code": "DJ",
+  "country_name": "Djibouti" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "喀麦隆",
+  "country_code": "CM",
+  "country_name": "Cameroon" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "圣多美和普林西比",
+  "country_code": "ST",
+  "country_name": "Sao Tome & Principe" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "圣赫勒拿",
+  "country_code": "SH",
+  "country_name": "St. Helena & Dependencies" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "坦桑尼亚",
+  "country_code": "TZ",
+  "country_name": "Tanzania" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "埃及",
+  "country_code": "EG",
+  "country_name": "Egypt" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "埃塞俄比亚",
+  "country_code": "ET",
+  "country_name": "Ethiopia" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "塞内加尔",
+  "country_code": "SN",
+  "country_name": "Senegal" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "塞拉利昂",
+  "country_code": "SL",
+  "country_name": "Sierra Leone" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "塞舌尔",
+  "country_code": "SC",
+  "country_name": "Seychelles" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "多哥",
+  "country_code": "TG",
+  "country_name": "Togo" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "安哥拉",
+  "country_code": "AO",
+  "country_name": "Angola" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "尼日利亚",
+  "country_code": "NG",
+  "country_name": "Nigeria" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "尼日尔",
+  "country_code": "NE",
+  "country_name": "Niger" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "布基纳法索",
+  "country_code": "BF",
+  "country_name": "Burkina" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "布隆迪",
+  "country_code": "BI",
+  "country_name": "Burundi" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "摩洛哥",
+  "country_code": "MA",
+  "country_name": "Morocco" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "斯威士兰",
+  "country_code": "SZ",
+  "country_name": "Swaziland" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "毛里塔尼亚",
+  "country_code": "MR",
+  "country_name": "Mauritania" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "毛里求斯",
+  "country_code": "MU",
+  "country_name": "Mauritius" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "津巴布韦",
+  "country_code": "ZW",
+  "country_name": "Zimbabwe" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "留尼汪",
+  "country_code": "RE",
+  "country_name": "Réunion" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "科摩罗",
+  "country_code": "KM",
+  "country_name": "The Comoros" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "科特迪瓦",
+  "country_code": "CI",
+  "country_name": "Cote d'Ivoire" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "突尼斯",
+  "country_code": "TN",
+  "country_name": "Tunisia" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "索马里",
+  "country_code": "SO",
+  "country_name": "Somalia" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "纳米比亚",
+  "country_code": "NA",
+  "country_name": "Namibia" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "肯尼亚",
+  "country_code": "KE",
+  "country_name": "Kenya" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "苏丹",
+  "country_code": "SD",
+  "country_name": "Sudan" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "英属印度洋领地",
+  "country_code": "IO",
+  "country_name": "British Indian Ocean Territory" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "莫桑比克",
+  "country_code": "MZ",
+  "country_name": "Mozambique" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "莱索托",
+  "country_code": "LS",
+  "country_name": "Lesotho" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "贝宁",
+  "country_code": "BJ",
+  "country_name": "Benin" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "赞比亚",
+  "country_code": "ZM",
+  "country_name": "Zambia" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "赤道几内亚",
+  "country_code": "GQ",
+  "country_name": "Equatorial Guinea" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "阿尔及利亚",
+  "country_code": "DZ",
+  "country_name": "Algeria" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "马拉维",
+  "country_code": "MW",
+  "country_name": "Malawi" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "马约特",
+  "country_code": "YT",
+  "country_name": "Mayotte" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "马达加斯加",
+  "country_code": "MG",
+  "country_name": "Madagascar" },
+
+{
+  "continent_cname": "非洲",
+  "continent_name": "AF",
+  "country_cname": "马里",
+  "country_code": "ML",
+  "country_name": "Mali" }];var _default =
+
+
+
+
+countryData;exports.default = _default;
+
+/***/ }),
+
+/***/ 537:
+/*!****************************************************************************************!*\
+  !*** C:/Users/Administrator/Desktop/zhaopin/components/lh-select-city/country-code.js ***!
+  \****************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var arr = [{
+  "en": "Angola",
+  "cn": "安哥拉",
+  "code": "+244",
+  "pinYinInitial": "A" },
+{
+  "en": "Afghanistan",
+  "cn": "阿富汗",
+  "code": "+93",
+  "pinYinInitial": "A" },
+{
+  "en": "Albania",
+  "cn": "阿尔巴尼亚",
+  "code": "+335",
+  "pinYinInitial": "A" },
+{
+  "en": "Algeria",
+  "cn": "阿尔及利亚",
+  "code": "+213",
+  "pinYinInitial": "A" },
+{
+  "en": "Andorra",
+  "cn": "安道尔共和国",
+  "code": "+376",
+  "pinYinInitial": "A" },
+{
+  "en": "Anguilla",
+  "cn": "安圭拉岛",
+  "code": "+1254",
+  "pinYinInitial": "A" },
+{
+  "en": "Antigua and Barbuda",
+  "cn": "安提瓜和巴布达",
+  "code": "+1268",
+  "pinYinInitial": "A" },
+{
+  "en": "Argentina",
+  "cn": "阿根廷",
+  "code": "+54",
+  "pinYinInitial": "A" },
+{
+  "en": "Armenia",
+  "cn": "亚美尼亚",
+  "code": "+374",
+  "pinYinInitial": "Y" },
+{
+  "en": "Ascension",
+  "cn": "阿森松",
+  "code": "+247",
+  "pinYinInitial": "A" },
+{
+  "en": "Australia",
+  "cn": "澳大利亚",
+  "code": "+61",
+  "pinYinInitial": "A" },
+{
+  "en": "Austria",
+  "cn": "奥地利",
+  "code": "+43",
+  "pinYinInitial": "A" },
+{
+  "en": "Azerbaijan",
+  "cn": "阿塞拜疆",
+  "code": "+994",
+  "pinYinInitial": "A" },
+{
+  "en": "Bahamas",
+  "cn": "巴哈马",
+  "code": "+1242",
+  "pinYinInitial": "B" },
+{
+  "en": "Bahrain",
+  "cn": "巴林",
+  "code": "+973",
+  "pinYinInitial": "B" },
+{
+  "en": "Bangladesh",
+  "cn": "孟加拉国",
+  "code": "+880",
+  "pinYinInitial": "M" },
+{
+  "en": "Barbados",
+  "cn": "巴巴多斯",
+  "code": "+1246",
+  "pinYinInitial": "B" },
+{
+  "en": "Belarus",
+  "cn": "白俄罗斯",
+  "code": "+375",
+  "pinYinInitial": "B" },
+{
+  "en": "Belgium",
+  "cn": "比利时",
+  "code": "+32",
+  "pinYinInitial": "B" },
+{
+  "en": "Belize",
+  "cn": "伯利兹",
+  "code": "+501",
+  "pinYinInitial": "B" },
+{
+  "en": "Benin",
+  "cn": "贝宁",
+  "code": "+229",
+  "pinYinInitial": "B" },
+{
+  "en": "Bermuda Is",
+  "cn": "百慕大群岛",
+  "code": "+1441",
+  "pinYinInitial": "B" },
+{
+  "en": "Bolivia",
+  "cn": "玻利维亚",
+  "code": "+591",
+  "pinYinInitial": "B" },
+{
+  "en": "Botswana",
+  "cn": "博茨瓦纳",
+  "code": "+267",
+  "pinYinInitial": "B" },
+{
+  "en": "Brazil",
+  "cn": "巴西",
+  "code": "+55",
+  "pinYinInitial": "B" },
+{
+  "en": "Brunei",
+  "cn": "文莱",
+  "code": "+673",
+  "pinYinInitial": "W" },
+{
+  "en": "Bulgaria",
+  "cn": "保加利亚",
+  "code": "+359",
+  "pinYinInitial": "B" },
+{
+  "en": "Burkina Faso",
+  "cn": "布基纳法索",
+  "code": "+226",
+  "pinYinInitial": "B" },
+{
+  "en": "Burma",
+  "cn": "缅甸",
+  "code": "+95",
+  "pinYinInitial": "M" },
+{
+  "en": "Burundi",
+  "cn": "布隆迪",
+  "code": "+257",
+  "pinYinInitial": "B" },
+{
+  "en": "Cameroon",
+  "cn": "喀麦隆",
+  "code": "+237",
+  "pinYinInitial": "K" },
+{
+  "en": "Canada",
+  "cn": "加拿大",
+  "code": "+1",
+  "pinYinInitial": "J" },
+{
+  "en": "Cayman Is",
+  "cn": "开曼群岛",
+  "code": "+1345",
+  "pinYinInitial": "K" },
+{
+  "en": "Central African Republic",
+  "cn": "中非共和国",
+  "code": "+236",
+  "pinYinInitial": "Z" },
+{
+  "en": "Chad",
+  "cn": "乍得",
+  "code": "+235",
+  "pinYinInitial": "Z" },
+{
+  "en": "Chile",
+  "cn": "智利",
+  "code": "+56",
+  "pinYinInitial": "Z" },
+{
+  "en": "China",
+  "cn": "中国",
+  "code": "+86",
+  "pinYinInitial": "Z" },
+{
+  "en": "Colombia",
+  "cn": "哥伦比亚",
+  "code": "+57",
+  "pinYinInitial": "G" },
+{
+  "en": "Congo",
+  "cn": "刚果",
+  "code": "+242",
+  "pinYinInitial": "G" },
+{
+  "en": "Cook Is",
+  "cn": "库克群岛",
+  "code": "+682",
+  "pinYinInitial": "K" },
+{
+  "en": "Costa Rica",
+  "cn": "哥斯达黎加",
+  "code": "+506",
+  "pinYinInitial": "G" },
+{
+  "en": "Cuba",
+  "cn": "古巴",
+  "code": "+53",
+  "pinYinInitial": "G" },
+{
+  "en": "Cyprus",
+  "cn": "塞浦路斯",
+  "code": "+357",
+  "pinYinInitial": "S" },
+{
+  "en": "Czech Republic",
+  "cn": "捷克",
+  "code": "+420",
+  "pinYinInitial": "J" },
+{
+  "en": "Denmark",
+  "cn": "丹麦",
+  "code": "+45",
+  "pinYinInitial": "D" },
+{
+  "en": "Djibouti",
+  "cn": "吉布提",
+  "code": "+253",
+  "pinYinInitial": "J" },
+{
+  "en": "Dominica Rep",
+  "cn": "多米尼加共和国",
+  "code": "+1890",
+  "pinYinInitial": "D" },
+{
+  "en": "Ecuador",
+  "cn": "厄瓜多尔",
+  "code": "+593",
+  "pinYinInitial": "E" },
+{
+  "en": "Egypt",
+  "cn": "埃及",
+  "code": "+20",
+  "pinYinInitial": "A" },
+{
+  "en": "EI Salvador",
+  "cn": "萨尔瓦多",
+  "code": "+503",
+  "pinYinInitial": "S" },
+{
+  "en": "Estonia",
+  "cn": "爱沙尼亚",
+  "code": "+372",
+  "pinYinInitial": "A" },
+{
+  "en": "Ethiopia",
+  "cn": "埃塞俄比亚",
+  "code": "+251",
+  "pinYinInitial": "A" },
+{
+  "en": "Fiji",
+  "cn": "斐济",
+  "code": "+679",
+  "pinYinInitial": "F" },
+{
+  "en": "Finland",
+  "cn": "芬兰",
+  "code": "+358",
+  "pinYinInitial": "F" },
+{
+  "en": "France",
+  "cn": "法国",
+  "code": "+33",
+  "pinYinInitial": "F" },
+{
+  "en": "French Guiana",
+  "cn": "法属圭亚那",
+  "code": "+594",
+  "pinYinInitial": "F" },
+{
+  "en": "French Polynesia",
+  "cn": "法属玻利尼西亚",
+  "code": "+689",
+  "pinYinInitial": "F" },
+{
+  "en": "Gabon",
+  "cn": "加蓬",
+  "code": "+241",
+  "pinYinInitial": "J" },
+{
+  "en": "Gambia",
+  "cn": "冈比亚",
+  "code": "+220",
+  "pinYinInitial": "G" },
+{
+  "en": "Georgia",
+  "cn": "格鲁吉亚",
+  "code": "+995",
+  "pinYinInitial": "G" },
+{
+  "en": "Germany",
+  "cn": "德国",
+  "code": "+49",
+  "pinYinInitial": "D" },
+{
+  "en": "Ghana",
+  "cn": "加纳",
+  "code": "+233",
+  "pinYinInitial": "J" },
+{
+  "en": "Gibraltar",
+  "cn": "直布罗陀",
+  "code": "+350",
+  "pinYinInitial": "Z" },
+{
+  "en": "Greece",
+  "cn": "希腊",
+  "code": "+30",
+  "pinYinInitial": "X" },
+{
+  "en": "Grenada",
+  "cn": "格林纳达",
+  "code": "+1809",
+  "pinYinInitial": "G" },
+{
+  "en": "Guam",
+  "cn": "关岛",
+  "code": "+1671",
+  "pinYinInitial": "G" },
+{
+  "en": "Guatemala",
+  "cn": "危地马拉",
+  "code": "+502",
+  "pinYinInitial": "W" },
+{
+  "en": "Guinea",
+  "cn": "几内亚",
+  "code": "+224",
+  "pinYinInitial": "J" },
+{
+  "en": "Guyana",
+  "cn": "圭亚那",
+  "code": "+592",
+  "pinYinInitial": "G" },
+{
+  "en": "Haiti",
+  "cn": "海地",
+  "code": "+509",
+  "pinYinInitial": "H" },
+{
+  "en": "Honduras",
+  "cn": "洪都拉斯",
+  "code": "+504",
+  "pinYinInitial": "H" },
+{
+  "en": "Hongkong",
+  "cn": "香港",
+  "code": "+852",
+  "pinYinInitial": "X" },
+{
+  "en": "Hungary",
+  "cn": "匈牙利",
+  "code": "+36",
+  "pinYinInitial": "X" },
+{
+  "en": "Iceland",
+  "cn": "冰岛",
+  "code": "+354",
+  "pinYinInitial": "B" },
+{
+  "en": "India",
+  "cn": "印度",
+  "code": "+91",
+  "pinYinInitial": "Y" },
+{
+  "en": "Indonesia",
+  "cn": "印度尼西亚",
+  "code": "+62",
+  "pinYinInitial": "Y" },
+{
+  "en": "Iran",
+  "cn": "伊朗",
+  "code": "+98",
+  "pinYinInitial": "Y" },
+{
+  "en": "Iraq",
+  "cn": "伊拉克",
+  "code": "+964",
+  "pinYinInitial": "Y" },
+{
+  "en": "Ireland",
+  "cn": "爱尔兰",
+  "code": "+353",
+  "pinYinInitial": "A" },
+{
+  "en": "Israel",
+  "cn": "以色列",
+  "code": "+972",
+  "pinYinInitial": "Y" },
+{
+  "en": "Italy",
+  "cn": "意大利",
+  "code": "+39",
+  "pinYinInitial": "Y" },
+{
+  "en": "Ivory Coast",
+  "cn": "科特迪瓦",
+  "code": "+225",
+  "pinYinInitial": "K" },
+{
+  "en": "Jamaica",
+  "cn": "牙买加",
+  "code": "+1876",
+  "pinYinInitial": "Y" },
+{
+  "en": "Japan",
+  "cn": "日本",
+  "code": "+81",
+  "pinYinInitial": "R" },
+{
+  "en": "Jordan",
+  "cn": "约旦",
+  "code": "+962",
+  "pinYinInitial": "Y" },
+{
+  "en": "Kampuchea (Cambodia )",
+  "cn": "柬埔寨",
+  "code": "+855",
+  "pinYinInitial": "J" },
+{
+  "en": "Kazakstan",
+  "cn": "哈萨克斯坦",
+  "code": "+327",
+  "pinYinInitial": "H" },
+{
+  "en": "Kenya",
+  "cn": "肯尼亚",
+  "code": "+254",
+  "pinYinInitial": "K" },
+{
+  "en": "Korea",
+  "cn": "韩国",
+  "code": "+82",
+  "pinYinInitial": "H" },
+{
+  "en": "Kuwait",
+  "cn": "科威特",
+  "code": "+965",
+  "pinYinInitial": "K" },
+{
+  "en": "Kyrgyzstan",
+  "cn": "吉尔吉斯坦",
+  "code": "+331",
+  "pinYinInitial": "J" },
+{
+  "en": "Laos",
+  "cn": "老挝",
+  "code": "+856",
+  "pinYinInitial": "L" },
+{
+  "en": "Latvia",
+  "cn": "拉脱维亚",
+  "code": "+371",
+  "pinYinInitial": "L" },
+{
+  "en": "Lebanon",
+  "cn": "黎巴嫩",
+  "code": "+961",
+  "pinYinInitial": "L" },
+{
+  "en": "Lesotho",
+  "cn": "莱索托",
+  "code": "+266",
+  "pinYinInitial": "L" },
+{
+  "en": "Liberia",
+  "cn": "利比里亚",
+  "code": "+231",
+  "pinYinInitial": "L" },
+{
+  "en": "Libya",
+  "cn": "利比亚",
+  "code": "+218",
+  "pinYinInitial": "L" },
+{
+  "en": "Liechtenstein",
+  "cn": "列支敦士登",
+  "code": "+423",
+  "pinYinInitial": "L" },
+{
+  "en": "Lithuania",
+  "cn": "立陶宛",
+  "code": "+370",
+  "pinYinInitial": "L" },
+{
+  "en": "Luxembourg",
+  "cn": "卢森堡",
+  "code": "+352",
+  "pinYinInitial": "L" },
+{
+  "en": "Macao",
+  "cn": "澳门",
+  "code": "+853",
+  "pinYinInitial": "A" },
+{
+  "en": "Madagascar",
+  "cn": "马达加斯加",
+  "code": "+261",
+  "pinYinInitial": "M" },
+{
+  "en": "Malawi",
+  "cn": "马拉维",
+  "code": "+265",
+  "pinYinInitial": "M" },
+{
+  "en": "Malaysia",
+  "cn": "马来西亚",
+  "code": "+60",
+  "pinYinInitial": "M" },
+{
+  "en": "Maldives",
+  "cn": "马尔代夫",
+  "code": "+960",
+  "pinYinInitial": "M" },
+{
+  "en": "Mali",
+  "cn": "马里",
+  "code": "+223",
+  "pinYinInitial": "M" },
+{
+  "en": "Malta",
+  "cn": "马耳他",
+  "code": "+356",
+  "pinYinInitial": "M" },
+{
+  "en": "Mariana Is",
+  "cn": "马里亚那群岛",
+  "code": "+1670",
+  "pinYinInitial": "M" },
+{
+  "en": "Martinique",
+  "cn": "马提尼克",
+  "code": "+596",
+  "pinYinInitial": "M" },
+{
+  "en": "Mauritius",
+  "cn": "毛里求斯",
+  "code": "+230",
+  "pinYinInitial": "M" },
+{
+  "en": "Mexico",
+  "cn": "墨西哥",
+  "code": "+52",
+  "pinYinInitial": "M" },
+{
+  "en": "Moldova",
+  "cn": "摩尔多瓦",
+  "code": "+373",
+  "pinYinInitial": "M" },
+{
+  "en": "Monaco",
+  "cn": "摩纳哥",
+  "code": "+377",
+  "pinYinInitial": "M" },
+{
+  "en": "Mongolia",
+  "cn": "蒙古",
+  "code": "+976",
+  "pinYinInitial": "M" },
+{
+  "en": "Montserrat Is",
+  "cn": "蒙特塞拉特岛",
+  "code": "+1664",
+  "pinYinInitial": "M" },
+{
+  "en": "Morocco",
+  "cn": "摩洛哥",
+  "code": "+212",
+  "pinYinInitial": "M" },
+{
+  "en": "Mozambique",
+  "cn": "莫桑比克",
+  "code": "+258",
+  "pinYinInitial": "M" },
+{
+  "en": "Namibia",
+  "cn": "纳米比亚",
+  "code": "+264",
+  "pinYinInitial": "N" },
+{
+  "en": "Nauru",
+  "cn": "瑙鲁",
+  "code": "+674",
+  "pinYinInitial": "N" },
+{
+  "en": "Nepal",
+  "cn": "尼泊尔",
+  "code": "+977",
+  "pinYinInitial": "N" },
+{
+  "en": "Netheriands Antilles",
+  "cn": "荷属安的列斯",
+  "code": "+599",
+  "pinYinInitial": "H" },
+{
+  "en": "Netherlands",
+  "cn": "荷兰",
+  "code": "+31",
+  "pinYinInitial": "H" },
+{
+  "en": "New Zealand",
+  "cn": "新西兰",
+  "code": "+64",
+  "pinYinInitial": "X" },
+{
+  "en": "Nicaragua",
+  "cn": "尼加拉瓜",
+  "code": "+505",
+  "pinYinInitial": "N" },
+{
+  "en": "Niger",
+  "cn": "尼日尔",
+  "code": "+227",
+  "pinYinInitial": "N" },
+{
+  "en": "Nigeria",
+  "cn": "尼日利亚",
+  "code": "+234",
+  "pinYinInitial": "N" },
+{
+  "en": "North Korea",
+  "cn": "朝鲜",
+  "code": "+850",
+  "pinYinInitial": "Z" },
+{
+  "en": "Norway",
+  "cn": "挪威",
+  "code": "+47",
+  "pinYinInitial": "N" },
+{
+  "en": "Oman",
+  "cn": "阿曼",
+  "code": "+968",
+  "pinYinInitial": "A" },
+{
+  "en": "Pakistan",
+  "cn": "巴基斯坦",
+  "code": "+92",
+  "pinYinInitial": "B" },
+{
+  "en": "Panama",
+  "cn": "巴拿马",
+  "code": "+507",
+  "pinYinInitial": "B" },
+{
+  "en": "Papua New Cuinea",
+  "cn": "巴布亚新几内亚",
+  "code": "+675",
+  "pinYinInitial": "B" },
+{
+  "en": "Paraguay",
+  "cn": "巴拉圭",
+  "code": "+595",
+  "pinYinInitial": "B" },
+{
+  "en": "Peru",
+  "cn": "秘鲁",
+  "code": "+51",
+  "pinYinInitial": "M" },
+{
+  "en": "Philippines",
+  "cn": "菲律宾",
+  "code": "+63",
+  "pinYinInitial": "F" },
+{
+  "en": "Poland",
+  "cn": "波兰",
+  "code": "+48",
+  "pinYinInitial": "B" },
+{
+  "en": "Portugal",
+  "cn": "葡萄牙",
+  "code": "+351",
+  "pinYinInitial": "P" },
+{
+  "en": "Puerto Rico",
+  "cn": "波多黎各",
+  "code": "+1787",
+  "pinYinInitial": "B" },
+{
+  "en": "Qatar",
+  "cn": "卡塔尔",
+  "code": "+974",
+  "pinYinInitial": "K" },
+{
+  "en": "Reunion",
+  "cn": "留尼旺",
+  "code": "+262",
+  "pinYinInitial": "L" },
+{
+  "en": "Romania",
+  "cn": "罗马尼亚",
+  "code": "+40",
+  "pinYinInitial": "L" },
+{
+  "en": "Russia",
+  "cn": "俄罗斯",
+  "code": "+7",
+  "pinYinInitial": "E" },
+{
+  "en": "Saint Lueia",
+  "cn": "圣卢西亚",
+  "code": "+1758",
+  "pinYinInitial": "S" },
+{
+  "en": "Saint Vincent",
+  "cn": "圣文森特岛",
+  "code": "+1784",
+  "pinYinInitial": "S" },
+{
+  "en": "Samoa Eastern",
+  "cn": "东萨摩亚(美)",
+  "code": "+684",
+  "pinYinInitial": "D" },
+{
+  "en": "Samoa Western",
+  "cn": "西萨摩亚",
+  "code": "+685",
+  "pinYinInitial": "X" },
+{
+  "en": "San Marino",
+  "cn": "圣马力诺",
+  "code": "+378",
+  "pinYinInitial": "S" },
+{
+  "en": "Sao Tome and Principe",
+  "cn": "圣多美和普林西比",
+  "code": "+239",
+  "pinYinInitial": "S" },
+{
+  "en": "Saudi Arabia",
+  "cn": "沙特阿拉伯",
+  "code": "+966",
+  "pinYinInitial": "S" },
+{
+  "en": "Senegal",
+  "cn": "塞内加尔",
+  "code": "+221",
+  "pinYinInitial": "S" },
+{
+  "en": "Seychelles",
+  "cn": "塞舌尔",
+  "code": "+248",
+  "pinYinInitial": "S" },
+{
+  "en": "Sierra Leone",
+  "cn": "塞拉利昂",
+  "code": "+232",
+  "pinYinInitial": "S" },
+{
+  "en": "Singapore",
+  "cn": "新加坡",
+  "code": "+65",
+  "pinYinInitial": "X" },
+{
+  "en": "Slovakia",
+  "cn": "斯洛伐克",
+  "code": "+421",
+  "pinYinInitial": "S" },
+{
+  "en": "Slovenia",
+  "cn": "斯洛文尼亚",
+  "code": "+386",
+  "pinYinInitial": "S" },
+{
+  "en": "Solomon Is",
+  "cn": "所罗门群岛",
+  "code": "+677",
+  "pinYinInitial": "S" },
+{
+  "en": "Somali",
+  "cn": "索马里",
+  "code": "+252",
+  "pinYinInitial": "S" },
+{
+  "en": "South Africa",
+  "cn": "南非",
+  "code": "+27",
+  "pinYinInitial": "N" },
+{
+  "en": "Spain",
+  "cn": "西班牙",
+  "code": "+34",
+  "pinYinInitial": "X" },
+{
+  "en": "SriLanka",
+  "cn": "斯里兰卡",
+  "code": "+94",
+  "pinYinInitial": "S" },
+{
+  "en": "St.Lucia",
+  "cn": "圣卢西亚",
+  "code": "+1758",
+  "pinYinInitial": "S" },
+{
+  "en": "St.Vincent",
+  "cn": "圣文森特",
+  "code": "+1784",
+  "pinYinInitial": "S" },
+{
+  "en": "Sudan",
+  "cn": "苏丹",
+  "code": "+249",
+  "pinYinInitial": "S" },
+{
+  "en": "Suriname",
+  "cn": "苏里南",
+  "code": "+597",
+  "pinYinInitial": "S" },
+{
+  "en": "Swaziland",
+  "cn": "斯威士兰",
+  "code": "+268",
+  "pinYinInitial": "S" },
+{
+  "en": "Sweden",
+  "cn": "瑞典",
+  "code": "+46",
+  "pinYinInitial": "R" },
+{
+  "en": "Switzerland",
+  "cn": "瑞士",
+  "code": "+41",
+  "pinYinInitial": "R" },
+{
+  "en": "Syria",
+  "cn": "叙利亚",
+  "code": "+963",
+  "pinYinInitial": "X" },
+{
+  "en": "Taiwan",
+  "cn": "台湾省",
+  "code": "+886",
+  "pinYinInitial": "T" },
+{
+  "en": "Tajikstan",
+  "cn": "塔吉克斯坦",
+  "code": "+992",
+  "pinYinInitial": "T" },
+{
+  "en": "Tanzania",
+  "cn": "坦桑尼亚",
+  "code": "+255",
+  "pinYinInitial": "T" },
+{
+  "en": "Thailand",
+  "cn": "泰国",
+  "code": "+66",
+  "pinYinInitial": "T" },
+{
+  "en": "Togo",
+  "cn": "多哥",
+  "code": "+228",
+  "pinYinInitial": "D" },
+{
+  "en": "Tonga",
+  "cn": "汤加",
+  "code": "+676",
+  "pinYinInitial": "T" },
+{
+  "en": "Trinidad and Tobago",
+  "cn": "特立尼达和多巴哥",
+  "code": "+1809",
+  "pinYinInitial": "T" },
+{
+  "en": "Tunisia",
+  "cn": "突尼斯",
+  "code": "+216",
+  "pinYinInitial": "T" },
+{
+  "en": "Turkey",
+  "cn": "土耳其",
+  "code": "+90",
+  "pinYinInitial": "T" },
+{
+  "en": "Turkmenistan",
+  "cn": "土库曼斯坦",
+  "code": "+993",
+  "pinYinInitial": "T" },
+{
+  "en": "Uganda",
+  "cn": "乌干达",
+  "code": "+256",
+  "pinYinInitial": "W" },
+{
+  "en": "Ukraine",
+  "cn": "乌克兰",
+  "code": "+380",
+  "pinYinInitial": "W" },
+{
+  "en": "United Arab Emirates",
+  "cn": "阿拉伯联合酋长国",
+  "code": "+971",
+  "pinYinInitial": "A" },
+{
+  "en": "United Kiongdom",
+  "cn": "英国",
+  "code": "+44",
+  "pinYinInitial": "Y" },
+{
+  "en": "United States of America",
+  "cn": "美国",
+  "code": "+1",
+  "pinYinInitial": "M" },
+{
+  "en": "Uruguay",
+  "cn": "乌拉圭",
+  "code": "+598",
+  "pinYinInitial": "W" },
+{
+  "en": "Uzbekistan",
+  "cn": "乌兹别克斯坦",
+  "code": "+233",
+  "pinYinInitial": "W" },
+{
+  "en": "Venezuela",
+  "cn": "委内瑞拉",
+  "code": "+58",
+  "pinYinInitial": "W" },
+{
+  "en": "Vietnam",
+  "cn": "越南",
+  "code": "+84",
+  "pinYinInitial": "Y" },
+{
+  "en": "Yemen",
+  "cn": "也门",
+  "code": "+967",
+  "pinYinInitial": "Y" },
+{
+  "en": "Yugoslavia",
+  "cn": "南斯拉夫",
+  "code": "+381",
+  "pinYinInitial": "N" },
+{
+  "en": "Zimbabwe",
+  "cn": "津巴布韦",
+  "code": "+263",
+  "pinYinInitial": "J" },
+{
+  "en": "Zaire",
+  "cn": "扎伊尔",
+  "code": "+243",
+  "pinYinInitial": "Z" },
+{
+  "en": "Zambia",
+  "cn": "赞比亚",
+  "code": "+260",
+  "pinYinInitial": "Z" }];var _default =
+
+arr;exports.default = _default;
+
+/***/ }),
+
+/***/ 54:
+/*!****************************************************************************************************!*\
+  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/axios/lib/helpers/normalizeHeaderName.js ***!
+  \****************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(/*! ../utils */ 44);
+
+module.exports = function normalizeHeaderName(headers, normalizedName) {
+  utils.forEach(headers, function processHeader(value, name) {
+    if (name !== normalizedName && name.toUpperCase() === normalizedName.toUpperCase()) {
+      headers[normalizedName] = value;
+      delete headers[name];
+    }
+  });
+};
+
+/***/ }),
+
+/***/ 55:
+/*!******************************************************************************************!*\
+  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/axios/lib/core/enhanceError.js ***!
+  \******************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/**
+               * Update an Error with the specified config, error code, and response.
+               *
+               * @param {Error} error The error to update.
+               * @param {Object} config The config.
+               * @param {string} [code] The error code (for example, 'ECONNABORTED').
+               * @param {Object} [request] The request.
+               * @param {Object} [response] The response.
+               * @returns {Error} The error.
+               */
+module.exports = function enhanceError(error, config, code, request, response) {
+  error.config = config;
+  if (code) {
+    error.code = code;
+  }
+
+  error.request = request;
+  error.response = response;
+  error.isAxiosError = true;
+
+  error.toJSON = function toJSON() {
+    return {
+      // Standard
+      message: this.message,
+      name: this.name,
+      // Microsoft
+      description: this.description,
+      number: this.number,
+      // Mozilla
+      fileName: this.fileName,
+      lineNumber: this.lineNumber,
+      columnNumber: this.columnNumber,
+      stack: this.stack,
+      // Axios
+      config: this.config,
+      code: this.code };
+
+  };
+  return error;
+};
+
+/***/ }),
+
+/***/ 56:
+/*!*************************************************************************************!*\
+  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/axios/lib/adapters/xhr.js ***!
+  \*************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var utils = __webpack_require__(/*! ./../utils */ 44);
+var settle = __webpack_require__(/*! ./../core/settle */ 57);
+var cookies = __webpack_require__(/*! ./../helpers/cookies */ 59);
+var buildURL = __webpack_require__(/*! ./../helpers/buildURL */ 47);
+var buildFullPath = __webpack_require__(/*! ../core/buildFullPath */ 60);
+var parseHeaders = __webpack_require__(/*! ./../helpers/parseHeaders */ 63);
+var isURLSameOrigin = __webpack_require__(/*! ./../helpers/isURLSameOrigin */ 64);
+var createError = __webpack_require__(/*! ../core/createError */ 58);
+
+module.exports = function xhrAdapter(config) {
+  return new Promise(function dispatchXhrRequest(resolve, reject) {
+    var requestData = config.data;
+    var requestHeaders = config.headers;
+    var responseType = config.responseType;
+
+    if (utils.isFormData(requestData)) {
+      delete requestHeaders['Content-Type']; // Let the browser set it
+    }
+
+    var request = new XMLHttpRequest();
+
+    // HTTP basic authentication
+    if (config.auth) {
+      var username = config.auth.username || '';
+      var password = config.auth.password ? unescape(encodeURIComponent(config.auth.password)) : '';
+      requestHeaders.Authorization = 'Basic ' + btoa(username + ':' + password);
+    }
+
+    var fullPath = buildFullPath(config.baseURL, config.url);
+    request.open(config.method.toUpperCase(), buildURL(fullPath, config.params, config.paramsSerializer), true);
+
+    // Set the request timeout in MS
+    request.timeout = config.timeout;
+
+    function onloadend() {
+      if (!request) {
+        return;
+      }
+      // Prepare the response
+      var responseHeaders = 'getAllResponseHeaders' in request ? parseHeaders(request.getAllResponseHeaders()) : null;
+      var responseData = !responseType || responseType === 'text' || responseType === 'json' ?
+      request.responseText : request.response;
+      var response = {
+        data: responseData,
+        status: request.status,
+        statusText: request.statusText,
+        headers: responseHeaders,
+        config: config,
+        request: request };
+
+
+      settle(resolve, reject, response);
+
+      // Clean up request
+      request = null;
+    }
+
+    if ('onloadend' in request) {
+      // Use onloadend if available
+      request.onloadend = onloadend;
+    } else {
+      // Listen for ready state to emulate onloadend
+      request.onreadystatechange = function handleLoad() {
+        if (!request || request.readyState !== 4) {
+          return;
+        }
+
+        // The request errored out and we didn't get a response, this will be
+        // handled by onerror instead
+        // With one exception: request that using file: protocol, most browsers
+        // will return status as 0 even though it's a successful request
+        if (request.status === 0 && !(request.responseURL && request.responseURL.indexOf('file:') === 0)) {
+          return;
+        }
+        // readystate handler is calling before onerror or ontimeout handlers,
+        // so we should call onloadend on the next 'tick'
+        setTimeout(onloadend);
+      };
+    }
+
+    // Handle browser request cancellation (as opposed to a manual cancellation)
+    request.onabort = function handleAbort() {
+      if (!request) {
+        return;
+      }
+
+      reject(createError('Request aborted', config, 'ECONNABORTED', request));
+
+      // Clean up request
+      request = null;
+    };
+
+    // Handle low level network errors
+    request.onerror = function handleError() {
+      // Real errors are hidden from us by the browser
+      // onerror should only fire if it's a network error
+      reject(createError('Network Error', config, null, request));
+
+      // Clean up request
+      request = null;
+    };
+
+    // Handle timeout
+    request.ontimeout = function handleTimeout() {
+      var timeoutErrorMessage = 'timeout of ' + config.timeout + 'ms exceeded';
+      if (config.timeoutErrorMessage) {
+        timeoutErrorMessage = config.timeoutErrorMessage;
+      }
+      reject(createError(
+      timeoutErrorMessage,
+      config,
+      config.transitional && config.transitional.clarifyTimeoutError ? 'ETIMEDOUT' : 'ECONNABORTED',
+      request));
+
+      // Clean up request
+      request = null;
+    };
+
+    // Add xsrf header
+    // This is only done if running in a standard browser environment.
+    // Specifically not if we're in a web worker, or react-native.
+    if (utils.isStandardBrowserEnv()) {
+      // Add xsrf header
+      var xsrfValue = (config.withCredentials || isURLSameOrigin(fullPath)) && config.xsrfCookieName ?
+      cookies.read(config.xsrfCookieName) :
+      undefined;
+
+      if (xsrfValue) {
+        requestHeaders[config.xsrfHeaderName] = xsrfValue;
+      }
+    }
+
+    // Add headers to the request
+    if ('setRequestHeader' in request) {
+      utils.forEach(requestHeaders, function setRequestHeader(val, key) {
+        if (typeof requestData === 'undefined' && key.toLowerCase() === 'content-type') {
+          // Remove Content-Type if data is undefined
+          delete requestHeaders[key];
+        } else {
+          // Otherwise add header to the request
+          request.setRequestHeader(key, val);
+        }
+      });
+    }
+
+    // Add withCredentials to request if needed
+    if (!utils.isUndefined(config.withCredentials)) {
+      request.withCredentials = !!config.withCredentials;
+    }
+
+    // Add responseType to request if needed
+    if (responseType && responseType !== 'json') {
+      request.responseType = config.responseType;
+    }
+
+    // Handle progress if needed
+    if (typeof config.onDownloadProgress === 'function') {
+      request.addEventListener('progress', config.onDownloadProgress);
+    }
+
+    // Not all browsers support upload events
+    if (typeof config.onUploadProgress === 'function' && request.upload) {
+      request.upload.addEventListener('progress', config.onUploadProgress);
+    }
+
+    if (config.cancelToken) {
+      // Handle cancellation
+      config.cancelToken.promise.then(function onCanceled(cancel) {
+        if (!request) {
+          return;
+        }
+
+        request.abort();
+        reject(cancel);
+        // Clean up request
+        request = null;
+      });
+    }
+
+    if (!requestData) {
+      requestData = null;
+    }
+
+    // Send the request
+    request.send(requestData);
+  });
+};
+
+/***/ }),
+
+/***/ 57:
+/*!************************************************************************************!*\
+  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/axios/lib/core/settle.js ***!
+  \************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var createError = __webpack_require__(/*! ./createError */ 58);
+
+/**
+                                             * Resolve or reject a Promise based on response status.
+                                             *
+                                             * @param {Function} resolve A function that resolves the promise.
+                                             * @param {Function} reject A function that rejects the promise.
+                                             * @param {object} response The response.
+                                             */
+module.exports = function settle(resolve, reject, response) {
+  var validateStatus = response.config.validateStatus;
+  if (!response.status || !validateStatus || validateStatus(response.status)) {
+    resolve(response);
+  } else {
+    reject(createError(
+    'Request failed with status code ' + response.status,
+    response.config,
+    null,
+    response.request,
+    response));
+
+  }
+};
+
+/***/ }),
+
+/***/ 571:
 /*!****************************************************************************************!*\
   !*** C:/Users/Administrator/Desktop/zhaopin/components/uni-swipe-action-item/mpwxs.js ***!
   \****************************************************************************************/
@@ -12904,7 +17728,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _isPC = __webpack_require__(/*! ./isPC */ 471);var _default =
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _isPC = __webpack_require__(/*! ./isPC */ 572);var _default =
 {
   data: function data() {
     return {
@@ -13039,7 +17863,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 
 /***/ }),
 
-/***/ 471:
+/***/ 572:
 /*!***************************************************************************************!*\
   !*** C:/Users/Administrator/Desktop/zhaopin/components/uni-swipe-action-item/isPC.js ***!
   \***************************************************************************************/
@@ -13062,72 +17886,36 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.isPC = isP
 
 /***/ }),
 
-/***/ 48:
-/*!************************************************************************************************!*\
-  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/axios/lib/core/InterceptorManager.js ***!
-  \************************************************************************************************/
+/***/ 58:
+/*!*****************************************************************************************!*\
+  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/axios/lib/core/createError.js ***!
+  \*****************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var utils = __webpack_require__(/*! ./../utils */ 44);
-
-function InterceptorManager() {
-  this.handlers = [];
-}
+var enhanceError = __webpack_require__(/*! ./enhanceError */ 55);
 
 /**
-   * Add a new interceptor to the stack
-   *
-   * @param {Function} fulfilled The function to handle `then` for a `Promise`
-   * @param {Function} rejected The function to handle `reject` for a `Promise`
-   *
-   * @return {Number} An ID used to remove interceptor later
-   */
-InterceptorManager.prototype.use = function use(fulfilled, rejected, options) {
-  this.handlers.push({
-    fulfilled: fulfilled,
-    rejected: rejected,
-    synchronous: options ? options.synchronous : false,
-    runWhen: options ? options.runWhen : null });
-
-  return this.handlers.length - 1;
+                                               * Create an Error with the specified message, config, error code, request and response.
+                                               *
+                                               * @param {string} message The error message.
+                                               * @param {Object} config The config.
+                                               * @param {string} [code] The error code (for example, 'ECONNABORTED').
+                                               * @param {Object} [request] The request.
+                                               * @param {Object} [response] The response.
+                                               * @returns {Error} The created error.
+                                               */
+module.exports = function createError(message, config, code, request, response) {
+  var error = new Error(message);
+  return enhanceError(error, config, code, request, response);
 };
-
-/**
-    * Remove an interceptor from the stack
-    *
-    * @param {Number} id The ID that was returned by `use`
-    */
-InterceptorManager.prototype.eject = function eject(id) {
-  if (this.handlers[id]) {
-    this.handlers[id] = null;
-  }
-};
-
-/**
-    * Iterate over all the registered interceptors
-    *
-    * This method is particularly useful for skipping over any
-    * interceptors that may have become `null` calling `eject`.
-    *
-    * @param {Function} fn The function to call for each interceptor
-    */
-InterceptorManager.prototype.forEach = function forEach(fn) {
-  utils.forEach(this.handlers, function forEachHandler(h) {
-    if (h !== null) {
-      fn(h);
-    }
-  });
-};
-
-module.exports = InterceptorManager;
 
 /***/ }),
 
-/***/ 481:
+/***/ 582:
 /*!******************************************************************************************!*\
   !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/uview-ui/libs/util/province.js ***!
   \******************************************************************************************/
@@ -13139,7 +17927,7 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
 
 /***/ }),
 
-/***/ 482:
+/***/ 583:
 /*!**************************************************************************************!*\
   !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/uview-ui/libs/util/city.js ***!
   \**************************************************************************************/
@@ -13151,7 +17939,7 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
 
 /***/ }),
 
-/***/ 483:
+/***/ 584:
 /*!**************************************************************************************!*\
   !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/uview-ui/libs/util/area.js ***!
   \**************************************************************************************/
@@ -13163,10 +17951,10 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
 
 /***/ }),
 
-/***/ 49:
-/*!*********************************************************************************************!*\
-  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/axios/lib/core/dispatchRequest.js ***!
-  \*********************************************************************************************/
+/***/ 59:
+/*!****************************************************************************************!*\
+  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/axios/lib/helpers/cookies.js ***!
+  \****************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -13174,89 +17962,59 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
 
 
 var utils = __webpack_require__(/*! ./../utils */ 44);
-var transformData = __webpack_require__(/*! ./transformData */ 50);
-var isCancel = __webpack_require__(/*! ../cancel/isCancel */ 65);
-var defaults = __webpack_require__(/*! ../defaults */ 51);
 
-/**
-                                        * Throws a `Cancel` if cancellation has been requested.
-                                        */
-function throwIfCancellationRequested(config) {
-  if (config.cancelToken) {
-    config.cancelToken.throwIfRequested();
-  }
-}
+module.exports =
+utils.isStandardBrowserEnv() ?
 
-/**
-   * Dispatch a request to the server using the configured adapter.
-   *
-   * @param {object} config The config that is to be used for the request
-   * @returns {Promise} The Promise to be fulfilled
-   */
-module.exports = function dispatchRequest(config) {
-  throwIfCancellationRequested(config);
+// Standard browser envs support document.cookie
+function standardBrowserEnv() {
+  return {
+    write: function write(name, value, expires, path, domain, secure) {
+      var cookie = [];
+      cookie.push(name + '=' + encodeURIComponent(value));
 
-  // Ensure headers exist
-  config.headers = config.headers || {};
-
-  // Transform request data
-  config.data = transformData.call(
-  config,
-  config.data,
-  config.headers,
-  config.transformRequest);
-
-
-  // Flatten headers
-  config.headers = utils.merge(
-  config.headers.common || {},
-  config.headers[config.method] || {},
-  config.headers);
-
-
-  utils.forEach(
-  ['delete', 'get', 'head', 'post', 'put', 'patch', 'common'],
-  function cleanHeaderConfig(method) {
-    delete config.headers[method];
-  });
-
-
-  var adapter = config.adapter || defaults.adapter;
-
-  return adapter(config).then(function onAdapterResolution(response) {
-    throwIfCancellationRequested(config);
-
-    // Transform response data
-    response.data = transformData.call(
-    config,
-    response.data,
-    response.headers,
-    config.transformResponse);
-
-
-    return response;
-  }, function onAdapterRejection(reason) {
-    if (!isCancel(reason)) {
-      throwIfCancellationRequested(config);
-
-      // Transform response data
-      if (reason && reason.response) {
-        reason.response.data = transformData.call(
-        config,
-        reason.response.data,
-        reason.response.headers,
-        config.transformResponse);
-
+      if (utils.isNumber(expires)) {
+        cookie.push('expires=' + new Date(expires).toGMTString());
       }
-    }
 
-    return Promise.reject(reason);
-  });
-};
+      if (utils.isString(path)) {
+        cookie.push('path=' + path);
+      }
+
+      if (utils.isString(domain)) {
+        cookie.push('domain=' + domain);
+      }
+
+      if (secure === true) {
+        cookie.push('secure');
+      }
+
+      document.cookie = cookie.join('; ');
+    },
+
+    read: function read(name) {
+      var match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
+      return match ? decodeURIComponent(match[3]) : null;
+    },
+
+    remove: function remove(name) {
+      this.write(name, '', Date.now() - 86400000);
+    } };
+
+}() :
+
+// Non standard browser env (web workers, react-native) lack needed support.
+function nonStandardBrowserEnv() {
+  return {
+    write: function write() {},
+    read: function read() {return null;},
+    remove: function remove() {} };
+
+}();
 
 /***/ }),
 
-/***/ 498:
+/***/ 599:
 /*!************************************************************************************************************!*\
   !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/uview-ui/components/u-parse/libs/MpHtmlParser.js ***!
   \************************************************************************************************************/
@@ -13270,9 +18028,9 @@ module.exports = function dispatchRequest(config) {
  * @author JinYufeng
  * @listens MIT
  */
-var cfg = __webpack_require__(/*! ./config.js */ 499),
+var cfg = __webpack_require__(/*! ./config.js */ 600),
 blankChar = cfg.blankChar,
-CssHandler = __webpack_require__(/*! ./CssHandler.js */ 500),
+CssHandler = __webpack_require__(/*! ./CssHandler.js */ 601),
 windowWidth = uni.getSystemInfoSync().windowWidth;
 var emoji;
 
@@ -13847,7 +18605,38 @@ module.exports = MpHtmlParser;
 
 /***/ }),
 
-/***/ 499:
+/***/ 60:
+/*!*******************************************************************************************!*\
+  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/axios/lib/core/buildFullPath.js ***!
+  \*******************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var isAbsoluteURL = __webpack_require__(/*! ../helpers/isAbsoluteURL */ 61);
+var combineURLs = __webpack_require__(/*! ../helpers/combineURLs */ 62);
+
+/**
+                                                      * Creates a new URL by combining the baseURL with the requestedURL,
+                                                      * only when the requestedURL is not already an absolute URL.
+                                                      * If the requestURL is absolute, this function returns the requestedURL untouched.
+                                                      *
+                                                      * @param {string} baseURL The base URL
+                                                      * @param {string} requestedURL Absolute or relative URL to combine
+                                                      * @returns {string} The combined full path
+                                                      */
+module.exports = function buildFullPath(baseURL, requestedURL) {
+  if (baseURL && !isAbsoluteURL(requestedURL)) {
+    return combineURLs(baseURL, requestedURL);
+  }
+  return requestedURL;
+};
+
+/***/ }),
+
+/***/ 600:
 /*!******************************************************************************************************!*\
   !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/uview-ui/components/u-parse/libs/config.js ***!
   \******************************************************************************************************/
@@ -13937,58 +18726,14 @@ module.exports = cfg;
 
 /***/ }),
 
-/***/ 5:
-/*!*********************************************************!*\
-  !*** C:/Users/Administrator/Desktop/zhaopin/pages.json ***!
-  \*********************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-
-
-/***/ }),
-
-/***/ 50:
-/*!*******************************************************************************************!*\
-  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/axios/lib/core/transformData.js ***!
-  \*******************************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var utils = __webpack_require__(/*! ./../utils */ 44);
-var defaults = __webpack_require__(/*! ./../defaults */ 51);
-
-/**
-                                          * Transform the data for a request or a response
-                                          *
-                                          * @param {Object|String} data The data to be transformed
-                                          * @param {Array} headers The headers for the request or response
-                                          * @param {Array|Function} fns A single function or Array of functions
-                                          * @returns {*} The resulting transformed data
-                                          */
-module.exports = function transformData(data, headers, fns) {
-  var context = this || defaults;
-  /*eslint no-param-reassign:0*/
-  utils.forEach(fns, function transform(fn) {
-    data = fn.call(context, data, headers);
-  });
-
-  return data;
-};
-
-/***/ }),
-
-/***/ 500:
+/***/ 601:
 /*!**********************************************************************************************************!*\
   !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/uview-ui/components/u-parse/libs/CssHandler.js ***!
   \**********************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-var cfg = __webpack_require__(/*! ./config.js */ 499),
+var cfg = __webpack_require__(/*! ./config.js */ 600),
 isLetter = function isLetter(c) {return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';};
 
 function CssHandler(tagStyle) {
@@ -14087,946 +18832,6 @@ parser.prototype.Content = function () {
     this.res[item] = content;}
   this.list = [];
   this.state = this.Space;
-};
-
-/***/ }),
-
-/***/ 51:
-/*!*********************************************************************************!*\
-  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/axios/lib/defaults.js ***!
-  \*********************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(process) {
-
-var utils = __webpack_require__(/*! ./utils */ 44);
-var normalizeHeaderName = __webpack_require__(/*! ./helpers/normalizeHeaderName */ 54);
-var enhanceError = __webpack_require__(/*! ./core/enhanceError */ 55);
-
-var DEFAULT_CONTENT_TYPE = {
-  'Content-Type': 'application/x-www-form-urlencoded' };
-
-
-function setContentTypeIfUnset(headers, value) {
-  if (!utils.isUndefined(headers) && utils.isUndefined(headers['Content-Type'])) {
-    headers['Content-Type'] = value;
-  }
-}
-
-function getDefaultAdapter() {
-  var adapter;
-  if (typeof XMLHttpRequest !== 'undefined') {
-    // For browsers use XHR adapter
-    adapter = __webpack_require__(/*! ./adapters/xhr */ 56);
-  } else if (typeof process !== 'undefined' && Object.prototype.toString.call(process) === '[object process]') {
-    // For node use HTTP adapter
-    adapter = __webpack_require__(/*! ./adapters/http */ 56);
-  }
-  return adapter;
-}
-
-function stringifySafely(rawValue, parser, encoder) {
-  if (utils.isString(rawValue)) {
-    try {
-      (parser || JSON.parse)(rawValue);
-      return utils.trim(rawValue);
-    } catch (e) {
-      if (e.name !== 'SyntaxError') {
-        throw e;
-      }
-    }
-  }
-
-  return (encoder || JSON.stringify)(rawValue);
-}
-
-var defaults = {
-
-  transitional: {
-    silentJSONParsing: true,
-    forcedJSONParsing: true,
-    clarifyTimeoutError: false },
-
-
-  adapter: getDefaultAdapter(),
-
-  transformRequest: [function transformRequest(data, headers) {
-    normalizeHeaderName(headers, 'Accept');
-    normalizeHeaderName(headers, 'Content-Type');
-
-    if (utils.isFormData(data) ||
-    utils.isArrayBuffer(data) ||
-    utils.isBuffer(data) ||
-    utils.isStream(data) ||
-    utils.isFile(data) ||
-    utils.isBlob(data))
-    {
-      return data;
-    }
-    if (utils.isArrayBufferView(data)) {
-      return data.buffer;
-    }
-    if (utils.isURLSearchParams(data)) {
-      setContentTypeIfUnset(headers, 'application/x-www-form-urlencoded;charset=utf-8');
-      return data.toString();
-    }
-    if (utils.isObject(data) || headers && headers['Content-Type'] === 'application/json') {
-      setContentTypeIfUnset(headers, 'application/json');
-      return stringifySafely(data);
-    }
-    return data;
-  }],
-
-  transformResponse: [function transformResponse(data) {
-    var transitional = this.transitional;
-    var silentJSONParsing = transitional && transitional.silentJSONParsing;
-    var forcedJSONParsing = transitional && transitional.forcedJSONParsing;
-    var strictJSONParsing = !silentJSONParsing && this.responseType === 'json';
-
-    if (strictJSONParsing || forcedJSONParsing && utils.isString(data) && data.length) {
-      try {
-        return JSON.parse(data);
-      } catch (e) {
-        if (strictJSONParsing) {
-          if (e.name === 'SyntaxError') {
-            throw enhanceError(e, this, 'E_JSON_PARSE');
-          }
-          throw e;
-        }
-      }
-    }
-
-    return data;
-  }],
-
-  /**
-       * A timeout in milliseconds to abort a request. If set to 0 (default) a
-       * timeout is not created.
-       */
-  timeout: 0,
-
-  xsrfCookieName: 'XSRF-TOKEN',
-  xsrfHeaderName: 'X-XSRF-TOKEN',
-
-  maxContentLength: -1,
-  maxBodyLength: -1,
-
-  validateStatus: function validateStatus(status) {
-    return status >= 200 && status < 300;
-  } };
-
-
-defaults.headers = {
-  common: {
-    'Accept': 'application/json, text/plain, */*' } };
-
-
-
-utils.forEach(['delete', 'get', 'head'], function forEachMethodNoData(method) {
-  defaults.headers[method] = {};
-});
-
-utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
-  defaults.headers[method] = utils.merge(DEFAULT_CONTENT_TYPE);
-});
-
-module.exports = defaults;
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../../../HBuilderX/plugins/uniapp-cli/node_modules/node-libs-browser/mock/process.js */ 52)))
-
-/***/ }),
-
-/***/ 52:
-/*!********************************************************!*\
-  !*** ./node_modules/node-libs-browser/mock/process.js ***!
-  \********************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-exports.nextTick = function nextTick(fn) {
-    var args = Array.prototype.slice.call(arguments);
-    args.shift();
-    setTimeout(function () {
-        fn.apply(null, args);
-    }, 0);
-};
-
-exports.platform = exports.arch = 
-exports.execPath = exports.title = 'browser';
-exports.pid = 1;
-exports.browser = true;
-exports.env = {};
-exports.argv = [];
-
-exports.binding = function (name) {
-	throw new Error('No such module. (Possibly not yet loaded)')
-};
-
-(function () {
-    var cwd = '/';
-    var path;
-    exports.cwd = function () { return cwd };
-    exports.chdir = function (dir) {
-        if (!path) path = __webpack_require__(/*! path */ 53);
-        cwd = path.resolve(dir, cwd);
-    };
-})();
-
-exports.exit = exports.kill = 
-exports.umask = exports.dlopen = 
-exports.uptime = exports.memoryUsage = 
-exports.uvCounters = function() {};
-exports.features = {};
-
-
-/***/ }),
-
-/***/ 53:
-/*!***********************************************!*\
-  !*** ./node_modules/path-browserify/index.js ***!
-  \***********************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(process) {// .dirname, .basename, and .extname methods are extracted from Node.js v8.11.1,
-// backported and transplited with Babel, with backwards-compat fixes
-
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-// resolves . and .. elements in a path array with directory names there
-// must be no slashes, empty elements, or device names (c:\) in the array
-// (so also no leading and trailing slashes - it does not distinguish
-// relative and absolute paths)
-function normalizeArray(parts, allowAboveRoot) {
-  // if the path tries to go above the root, `up` ends up > 0
-  var up = 0;
-  for (var i = parts.length - 1; i >= 0; i--) {
-    var last = parts[i];
-    if (last === '.') {
-      parts.splice(i, 1);
-    } else if (last === '..') {
-      parts.splice(i, 1);
-      up++;
-    } else if (up) {
-      parts.splice(i, 1);
-      up--;
-    }
-  }
-
-  // if the path is allowed to go above the root, restore leading ..s
-  if (allowAboveRoot) {
-    for (; up--; up) {
-      parts.unshift('..');
-    }
-  }
-
-  return parts;
-}
-
-// path.resolve([from ...], to)
-// posix version
-exports.resolve = function() {
-  var resolvedPath = '',
-      resolvedAbsolute = false;
-
-  for (var i = arguments.length - 1; i >= -1 && !resolvedAbsolute; i--) {
-    var path = (i >= 0) ? arguments[i] : process.cwd();
-
-    // Skip empty and invalid entries
-    if (typeof path !== 'string') {
-      throw new TypeError('Arguments to path.resolve must be strings');
-    } else if (!path) {
-      continue;
-    }
-
-    resolvedPath = path + '/' + resolvedPath;
-    resolvedAbsolute = path.charAt(0) === '/';
-  }
-
-  // At this point the path should be resolved to a full absolute path, but
-  // handle relative paths to be safe (might happen when process.cwd() fails)
-
-  // Normalize the path
-  resolvedPath = normalizeArray(filter(resolvedPath.split('/'), function(p) {
-    return !!p;
-  }), !resolvedAbsolute).join('/');
-
-  return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
-};
-
-// path.normalize(path)
-// posix version
-exports.normalize = function(path) {
-  var isAbsolute = exports.isAbsolute(path),
-      trailingSlash = substr(path, -1) === '/';
-
-  // Normalize the path
-  path = normalizeArray(filter(path.split('/'), function(p) {
-    return !!p;
-  }), !isAbsolute).join('/');
-
-  if (!path && !isAbsolute) {
-    path = '.';
-  }
-  if (path && trailingSlash) {
-    path += '/';
-  }
-
-  return (isAbsolute ? '/' : '') + path;
-};
-
-// posix version
-exports.isAbsolute = function(path) {
-  return path.charAt(0) === '/';
-};
-
-// posix version
-exports.join = function() {
-  var paths = Array.prototype.slice.call(arguments, 0);
-  return exports.normalize(filter(paths, function(p, index) {
-    if (typeof p !== 'string') {
-      throw new TypeError('Arguments to path.join must be strings');
-    }
-    return p;
-  }).join('/'));
-};
-
-
-// path.relative(from, to)
-// posix version
-exports.relative = function(from, to) {
-  from = exports.resolve(from).substr(1);
-  to = exports.resolve(to).substr(1);
-
-  function trim(arr) {
-    var start = 0;
-    for (; start < arr.length; start++) {
-      if (arr[start] !== '') break;
-    }
-
-    var end = arr.length - 1;
-    for (; end >= 0; end--) {
-      if (arr[end] !== '') break;
-    }
-
-    if (start > end) return [];
-    return arr.slice(start, end - start + 1);
-  }
-
-  var fromParts = trim(from.split('/'));
-  var toParts = trim(to.split('/'));
-
-  var length = Math.min(fromParts.length, toParts.length);
-  var samePartsLength = length;
-  for (var i = 0; i < length; i++) {
-    if (fromParts[i] !== toParts[i]) {
-      samePartsLength = i;
-      break;
-    }
-  }
-
-  var outputParts = [];
-  for (var i = samePartsLength; i < fromParts.length; i++) {
-    outputParts.push('..');
-  }
-
-  outputParts = outputParts.concat(toParts.slice(samePartsLength));
-
-  return outputParts.join('/');
-};
-
-exports.sep = '/';
-exports.delimiter = ':';
-
-exports.dirname = function (path) {
-  if (typeof path !== 'string') path = path + '';
-  if (path.length === 0) return '.';
-  var code = path.charCodeAt(0);
-  var hasRoot = code === 47 /*/*/;
-  var end = -1;
-  var matchedSlash = true;
-  for (var i = path.length - 1; i >= 1; --i) {
-    code = path.charCodeAt(i);
-    if (code === 47 /*/*/) {
-        if (!matchedSlash) {
-          end = i;
-          break;
-        }
-      } else {
-      // We saw the first non-path separator
-      matchedSlash = false;
-    }
-  }
-
-  if (end === -1) return hasRoot ? '/' : '.';
-  if (hasRoot && end === 1) {
-    // return '//';
-    // Backwards-compat fix:
-    return '/';
-  }
-  return path.slice(0, end);
-};
-
-function basename(path) {
-  if (typeof path !== 'string') path = path + '';
-
-  var start = 0;
-  var end = -1;
-  var matchedSlash = true;
-  var i;
-
-  for (i = path.length - 1; i >= 0; --i) {
-    if (path.charCodeAt(i) === 47 /*/*/) {
-        // If we reached a path separator that was not part of a set of path
-        // separators at the end of the string, stop now
-        if (!matchedSlash) {
-          start = i + 1;
-          break;
-        }
-      } else if (end === -1) {
-      // We saw the first non-path separator, mark this as the end of our
-      // path component
-      matchedSlash = false;
-      end = i + 1;
-    }
-  }
-
-  if (end === -1) return '';
-  return path.slice(start, end);
-}
-
-// Uses a mixed approach for backwards-compatibility, as ext behavior changed
-// in new Node.js versions, so only basename() above is backported here
-exports.basename = function (path, ext) {
-  var f = basename(path);
-  if (ext && f.substr(-1 * ext.length) === ext) {
-    f = f.substr(0, f.length - ext.length);
-  }
-  return f;
-};
-
-exports.extname = function (path) {
-  if (typeof path !== 'string') path = path + '';
-  var startDot = -1;
-  var startPart = 0;
-  var end = -1;
-  var matchedSlash = true;
-  // Track the state of characters (if any) we see before our first dot and
-  // after any path separator we find
-  var preDotState = 0;
-  for (var i = path.length - 1; i >= 0; --i) {
-    var code = path.charCodeAt(i);
-    if (code === 47 /*/*/) {
-        // If we reached a path separator that was not part of a set of path
-        // separators at the end of the string, stop now
-        if (!matchedSlash) {
-          startPart = i + 1;
-          break;
-        }
-        continue;
-      }
-    if (end === -1) {
-      // We saw the first non-path separator, mark this as the end of our
-      // extension
-      matchedSlash = false;
-      end = i + 1;
-    }
-    if (code === 46 /*.*/) {
-        // If this is our first dot, mark it as the start of our extension
-        if (startDot === -1)
-          startDot = i;
-        else if (preDotState !== 1)
-          preDotState = 1;
-    } else if (startDot !== -1) {
-      // We saw a non-dot and non-path separator before our dot, so we should
-      // have a good chance at having a non-empty extension
-      preDotState = -1;
-    }
-  }
-
-  if (startDot === -1 || end === -1 ||
-      // We saw a non-dot character immediately before the dot
-      preDotState === 0 ||
-      // The (right-most) trimmed path component is exactly '..'
-      preDotState === 1 && startDot === end - 1 && startDot === startPart + 1) {
-    return '';
-  }
-  return path.slice(startDot, end);
-};
-
-function filter (xs, f) {
-    if (xs.filter) return xs.filter(f);
-    var res = [];
-    for (var i = 0; i < xs.length; i++) {
-        if (f(xs[i], i, xs)) res.push(xs[i]);
-    }
-    return res;
-}
-
-// String.prototype.substr - negative index don't work in IE8
-var substr = 'ab'.substr(-1) === 'b'
-    ? function (str, start, len) { return str.substr(start, len) }
-    : function (str, start, len) {
-        if (start < 0) start = str.length + start;
-        return str.substr(start, len);
-    }
-;
-
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../node-libs-browser/mock/process.js */ 52)))
-
-/***/ }),
-
-/***/ 54:
-/*!****************************************************************************************************!*\
-  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/axios/lib/helpers/normalizeHeaderName.js ***!
-  \****************************************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var utils = __webpack_require__(/*! ../utils */ 44);
-
-module.exports = function normalizeHeaderName(headers, normalizedName) {
-  utils.forEach(headers, function processHeader(value, name) {
-    if (name !== normalizedName && name.toUpperCase() === normalizedName.toUpperCase()) {
-      headers[normalizedName] = value;
-      delete headers[name];
-    }
-  });
-};
-
-/***/ }),
-
-/***/ 55:
-/*!******************************************************************************************!*\
-  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/axios/lib/core/enhanceError.js ***!
-  \******************************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/**
-               * Update an Error with the specified config, error code, and response.
-               *
-               * @param {Error} error The error to update.
-               * @param {Object} config The config.
-               * @param {string} [code] The error code (for example, 'ECONNABORTED').
-               * @param {Object} [request] The request.
-               * @param {Object} [response] The response.
-               * @returns {Error} The error.
-               */
-module.exports = function enhanceError(error, config, code, request, response) {
-  error.config = config;
-  if (code) {
-    error.code = code;
-  }
-
-  error.request = request;
-  error.response = response;
-  error.isAxiosError = true;
-
-  error.toJSON = function toJSON() {
-    return {
-      // Standard
-      message: this.message,
-      name: this.name,
-      // Microsoft
-      description: this.description,
-      number: this.number,
-      // Mozilla
-      fileName: this.fileName,
-      lineNumber: this.lineNumber,
-      columnNumber: this.columnNumber,
-      stack: this.stack,
-      // Axios
-      config: this.config,
-      code: this.code };
-
-  };
-  return error;
-};
-
-/***/ }),
-
-/***/ 56:
-/*!*************************************************************************************!*\
-  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/axios/lib/adapters/xhr.js ***!
-  \*************************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var utils = __webpack_require__(/*! ./../utils */ 44);
-var settle = __webpack_require__(/*! ./../core/settle */ 57);
-var cookies = __webpack_require__(/*! ./../helpers/cookies */ 59);
-var buildURL = __webpack_require__(/*! ./../helpers/buildURL */ 47);
-var buildFullPath = __webpack_require__(/*! ../core/buildFullPath */ 60);
-var parseHeaders = __webpack_require__(/*! ./../helpers/parseHeaders */ 63);
-var isURLSameOrigin = __webpack_require__(/*! ./../helpers/isURLSameOrigin */ 64);
-var createError = __webpack_require__(/*! ../core/createError */ 58);
-
-module.exports = function xhrAdapter(config) {
-  return new Promise(function dispatchXhrRequest(resolve, reject) {
-    var requestData = config.data;
-    var requestHeaders = config.headers;
-    var responseType = config.responseType;
-
-    if (utils.isFormData(requestData)) {
-      delete requestHeaders['Content-Type']; // Let the browser set it
-    }
-
-    var request = new XMLHttpRequest();
-
-    // HTTP basic authentication
-    if (config.auth) {
-      var username = config.auth.username || '';
-      var password = config.auth.password ? unescape(encodeURIComponent(config.auth.password)) : '';
-      requestHeaders.Authorization = 'Basic ' + btoa(username + ':' + password);
-    }
-
-    var fullPath = buildFullPath(config.baseURL, config.url);
-    request.open(config.method.toUpperCase(), buildURL(fullPath, config.params, config.paramsSerializer), true);
-
-    // Set the request timeout in MS
-    request.timeout = config.timeout;
-
-    function onloadend() {
-      if (!request) {
-        return;
-      }
-      // Prepare the response
-      var responseHeaders = 'getAllResponseHeaders' in request ? parseHeaders(request.getAllResponseHeaders()) : null;
-      var responseData = !responseType || responseType === 'text' || responseType === 'json' ?
-      request.responseText : request.response;
-      var response = {
-        data: responseData,
-        status: request.status,
-        statusText: request.statusText,
-        headers: responseHeaders,
-        config: config,
-        request: request };
-
-
-      settle(resolve, reject, response);
-
-      // Clean up request
-      request = null;
-    }
-
-    if ('onloadend' in request) {
-      // Use onloadend if available
-      request.onloadend = onloadend;
-    } else {
-      // Listen for ready state to emulate onloadend
-      request.onreadystatechange = function handleLoad() {
-        if (!request || request.readyState !== 4) {
-          return;
-        }
-
-        // The request errored out and we didn't get a response, this will be
-        // handled by onerror instead
-        // With one exception: request that using file: protocol, most browsers
-        // will return status as 0 even though it's a successful request
-        if (request.status === 0 && !(request.responseURL && request.responseURL.indexOf('file:') === 0)) {
-          return;
-        }
-        // readystate handler is calling before onerror or ontimeout handlers,
-        // so we should call onloadend on the next 'tick'
-        setTimeout(onloadend);
-      };
-    }
-
-    // Handle browser request cancellation (as opposed to a manual cancellation)
-    request.onabort = function handleAbort() {
-      if (!request) {
-        return;
-      }
-
-      reject(createError('Request aborted', config, 'ECONNABORTED', request));
-
-      // Clean up request
-      request = null;
-    };
-
-    // Handle low level network errors
-    request.onerror = function handleError() {
-      // Real errors are hidden from us by the browser
-      // onerror should only fire if it's a network error
-      reject(createError('Network Error', config, null, request));
-
-      // Clean up request
-      request = null;
-    };
-
-    // Handle timeout
-    request.ontimeout = function handleTimeout() {
-      var timeoutErrorMessage = 'timeout of ' + config.timeout + 'ms exceeded';
-      if (config.timeoutErrorMessage) {
-        timeoutErrorMessage = config.timeoutErrorMessage;
-      }
-      reject(createError(
-      timeoutErrorMessage,
-      config,
-      config.transitional && config.transitional.clarifyTimeoutError ? 'ETIMEDOUT' : 'ECONNABORTED',
-      request));
-
-      // Clean up request
-      request = null;
-    };
-
-    // Add xsrf header
-    // This is only done if running in a standard browser environment.
-    // Specifically not if we're in a web worker, or react-native.
-    if (utils.isStandardBrowserEnv()) {
-      // Add xsrf header
-      var xsrfValue = (config.withCredentials || isURLSameOrigin(fullPath)) && config.xsrfCookieName ?
-      cookies.read(config.xsrfCookieName) :
-      undefined;
-
-      if (xsrfValue) {
-        requestHeaders[config.xsrfHeaderName] = xsrfValue;
-      }
-    }
-
-    // Add headers to the request
-    if ('setRequestHeader' in request) {
-      utils.forEach(requestHeaders, function setRequestHeader(val, key) {
-        if (typeof requestData === 'undefined' && key.toLowerCase() === 'content-type') {
-          // Remove Content-Type if data is undefined
-          delete requestHeaders[key];
-        } else {
-          // Otherwise add header to the request
-          request.setRequestHeader(key, val);
-        }
-      });
-    }
-
-    // Add withCredentials to request if needed
-    if (!utils.isUndefined(config.withCredentials)) {
-      request.withCredentials = !!config.withCredentials;
-    }
-
-    // Add responseType to request if needed
-    if (responseType && responseType !== 'json') {
-      request.responseType = config.responseType;
-    }
-
-    // Handle progress if needed
-    if (typeof config.onDownloadProgress === 'function') {
-      request.addEventListener('progress', config.onDownloadProgress);
-    }
-
-    // Not all browsers support upload events
-    if (typeof config.onUploadProgress === 'function' && request.upload) {
-      request.upload.addEventListener('progress', config.onUploadProgress);
-    }
-
-    if (config.cancelToken) {
-      // Handle cancellation
-      config.cancelToken.promise.then(function onCanceled(cancel) {
-        if (!request) {
-          return;
-        }
-
-        request.abort();
-        reject(cancel);
-        // Clean up request
-        request = null;
-      });
-    }
-
-    if (!requestData) {
-      requestData = null;
-    }
-
-    // Send the request
-    request.send(requestData);
-  });
-};
-
-/***/ }),
-
-/***/ 57:
-/*!************************************************************************************!*\
-  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/axios/lib/core/settle.js ***!
-  \************************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var createError = __webpack_require__(/*! ./createError */ 58);
-
-/**
-                                             * Resolve or reject a Promise based on response status.
-                                             *
-                                             * @param {Function} resolve A function that resolves the promise.
-                                             * @param {Function} reject A function that rejects the promise.
-                                             * @param {object} response The response.
-                                             */
-module.exports = function settle(resolve, reject, response) {
-  var validateStatus = response.config.validateStatus;
-  if (!response.status || !validateStatus || validateStatus(response.status)) {
-    resolve(response);
-  } else {
-    reject(createError(
-    'Request failed with status code ' + response.status,
-    response.config,
-    null,
-    response.request,
-    response));
-
-  }
-};
-
-/***/ }),
-
-/***/ 58:
-/*!*****************************************************************************************!*\
-  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/axios/lib/core/createError.js ***!
-  \*****************************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var enhanceError = __webpack_require__(/*! ./enhanceError */ 55);
-
-/**
-                                               * Create an Error with the specified message, config, error code, request and response.
-                                               *
-                                               * @param {string} message The error message.
-                                               * @param {Object} config The config.
-                                               * @param {string} [code] The error code (for example, 'ECONNABORTED').
-                                               * @param {Object} [request] The request.
-                                               * @param {Object} [response] The response.
-                                               * @returns {Error} The created error.
-                                               */
-module.exports = function createError(message, config, code, request, response) {
-  var error = new Error(message);
-  return enhanceError(error, config, code, request, response);
-};
-
-/***/ }),
-
-/***/ 59:
-/*!****************************************************************************************!*\
-  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/axios/lib/helpers/cookies.js ***!
-  \****************************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var utils = __webpack_require__(/*! ./../utils */ 44);
-
-module.exports =
-utils.isStandardBrowserEnv() ?
-
-// Standard browser envs support document.cookie
-function standardBrowserEnv() {
-  return {
-    write: function write(name, value, expires, path, domain, secure) {
-      var cookie = [];
-      cookie.push(name + '=' + encodeURIComponent(value));
-
-      if (utils.isNumber(expires)) {
-        cookie.push('expires=' + new Date(expires).toGMTString());
-      }
-
-      if (utils.isString(path)) {
-        cookie.push('path=' + path);
-      }
-
-      if (utils.isString(domain)) {
-        cookie.push('domain=' + domain);
-      }
-
-      if (secure === true) {
-        cookie.push('secure');
-      }
-
-      document.cookie = cookie.join('; ');
-    },
-
-    read: function read(name) {
-      var match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
-      return match ? decodeURIComponent(match[3]) : null;
-    },
-
-    remove: function remove(name) {
-      this.write(name, '', Date.now() - 86400000);
-    } };
-
-}() :
-
-// Non standard browser env (web workers, react-native) lack needed support.
-function nonStandardBrowserEnv() {
-  return {
-    write: function write() {},
-    read: function read() {return null;},
-    remove: function remove() {} };
-
-}();
-
-/***/ }),
-
-/***/ 60:
-/*!*******************************************************************************************!*\
-  !*** C:/Users/Administrator/Desktop/zhaopin/node_modules/axios/lib/core/buildFullPath.js ***!
-  \*******************************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var isAbsoluteURL = __webpack_require__(/*! ../helpers/isAbsoluteURL */ 61);
-var combineURLs = __webpack_require__(/*! ../helpers/combineURLs */ 62);
-
-/**
-                                                      * Creates a new URL by combining the baseURL with the requestedURL,
-                                                      * only when the requestedURL is not already an absolute URL.
-                                                      * If the requestURL is absolute, this function returns the requestedURL untouched.
-                                                      *
-                                                      * @param {string} baseURL The base URL
-                                                      * @param {string} requestedURL Absolute or relative URL to combine
-                                                      * @returns {string} The combined full path
-                                                      */
-module.exports = function buildFullPath(baseURL, requestedURL) {
-  if (baseURL && !isAbsoluteURL(requestedURL)) {
-    return combineURLs(baseURL, requestedURL);
-  }
-  return requestedURL;
 };
 
 /***/ }),

@@ -1,0 +1,725 @@
+<template>
+	<view class="select-city-wrap" :style="'height:1400rpx'">
+		<view class="u-menu-wrap">
+			<scroll-view scroll-y scroll-with-animation class="u-tab-view menu-scroll-view" :show-scrollbar="false"
+				:style="'height:'+windowHeight">
+				<view v-for="(item,index) in countryList" :key="index" class="u-tab-item"
+					:class="[current==index ? 'u-tab-item-active' : '',current==index+1&&current!=0?'i_jian1':'',current==index-1?'i_jia1':'']"
+					:data-current="index" @tap.stop="swichMenu(index)">
+					<text class="u-line-1">{{item.name}}</text>
+					<view v-if="item.checkNum>0" class="numBox">{{item.checkNum}}</view>
+					<view class="after"></view>
+				</view>
+				<view class="u-tab-item"></view>
+				<view class="u-tab-item"></view>
+				<view class="u-tab-item"></view>
+				<view class="u-tab-item"></view>
+				<view class="u-tab-item"></view>
+				<view class="u-tab-item"></view>
+				<view class="u-tab-item"></view>
+			</scroll-view>
+			<block v-for="(item,i) in countryList" :key="i">
+				<scroll-view :scroll-into-view="scrollIntoId" scroll-y scroll-with-animation class="right-box"
+					v-if="current==i">
+					<view class="page-view">
+						<view class="xx" id='current'>全部国家</view>
+						<view class="class-item" :id="ele.pinY" v-for="ele in item.pingList" :key="ele.pinY">
+							<view class="item-title2">
+								<text>{{ele.pinY}}</text>
+							</view>
+							<view @click="onSelect(country.country_cname)" class="item-container"
+								v-for="country in ele.list" :key="country.country_code">
+								<view class="txt1">{{country.country_cname}}</view>
+							</view>
+
+						</view>
+					</view>
+				</scroll-view>
+			</block>
+		</view>
+
+		<!-- 右边锚点 -->
+		<view class="anchor" @touchstart="start" v-if="sliding">
+			<view>
+				<view class="anchor-item" @click="scrollIntoId='current' "><text class="anchor-text">#</text></view>
+				<view class="anchor-item" v-for="(item,i) in anchorArr" :key="i" @click="clickAnchor(item)">
+					<text class="anchor-text">{{item}}</text>
+				</view>
+			</view>
+		</view>
+	</view>
+</template>
+<script>
+	// hotCitys  热门城市  
+	// value 当前选中城市
+	// windowHeight  scroll的高 也是滑块的高 记得带单位!!! px rpx upx都支持
+	// sliding 是否开始滑动选择 默认开启  false true
+	// @onSelect   点击切换城市事件 参数为城市名称
+	import countryData from './countryList.js'
+	import countryDataPing from './country-code.js'
+	const propComparator = (propName) =>
+		(a, b) => a[propName].toLowerCase() == b[propName].toLowerCase() ? 0 : a[propName]
+		.toLowerCase() < b[propName].toLowerCase() ? -1 : 1
+	export default {
+		props: {
+			hotCitys: {
+				type: Array,
+				default () {
+					return []
+				}
+			},
+			value: {
+				type: String
+			},
+			windowHeight: {
+				type: String
+			},
+			// 开启滑动选择
+			sliding: {
+				type: Boolean,
+				default: true
+			},
+		},
+		data() {
+			return {
+				countryList: [],
+				keyword: '',
+				countryDataPing,
+				countryData,
+				scrollIntoId: '',
+				anchorArr: [],
+				//开始滑动位置
+				startY: "",
+				// 滑动中当前选中下标
+				downIndex: -1,
+				//
+				scrollTop: 0, //tab标题的滚动条位置
+				current: 0, // 预设当前项的值
+				menuHeight: 0, // 左边菜单的高度
+				menuItemHeight: 0, // 左边菜单item的高度
+			}
+		},
+		computed: {},
+		created() {
+			var obj1 = {
+				name: '亚洲',
+				pingList: [],
+				Shouping: [],
+			}
+			var obj2 = {
+				name: '北美洲',
+				pingList: [],
+				Shouping: [],
+			}
+			var obj3 = {
+				name: '南美洲',
+				pingList: [],
+				Shouping: [],
+			}
+			var obj4 = {
+				name: '大洋洲',
+				pingList: [],
+				Shouping: [],
+			}
+			var obj5 = {
+				name: '欧洲',
+				pingList: [],
+				Shouping: [],
+			}
+			var obj6 = {
+				name: '非洲',
+				pingList: [],
+				Shouping: [],
+			}
+			this.countryData.forEach(ele => {
+				this.countryDataPing.forEach(ele2 => {
+					if (ele2.cn == ele.country_cname) {
+						ele.pinYinInitial = ele2.pinYinInitial
+					}
+				})
+				if (ele.pinYinInitial) {
+					if (ele.continent_name == 'AS') {
+						obj1.Shouping.push(ele.pinYinInitial)
+						obj1.Shouping = [...new Set(obj1.Shouping)]
+						obj1.Shouping.sort((a, b) => {
+							return a.toLowerCase().localeCompare(b.toLowerCase());
+						})
+						var index = obj1.pingList.findIndex(item => item.pinY == ele.pinYinInitial)
+						if (index == -1) { //说明arr中不存在id为objid的对象
+							obj1.pingList.push({
+								pinY: ele.pinYinInitial,
+								list: [ele]
+							})
+						} else {
+							obj1.pingList[index].list.push(ele)
+						}
+					} else if (ele.continent_name == 'NA') {
+						obj2.Shouping.push(ele.pinYinInitial)
+						obj2.Shouping = [...new Set(obj2.Shouping)]
+						obj2.Shouping.sort((a, b) => {
+							return a.toLowerCase().localeCompare(b.toLowerCase());
+						})
+						var index = obj2.pingList.findIndex(item => item.pinY == ele.pinYinInitial)
+						if (index == -1) { //说明arr中不存在id为objid的对象
+							obj2.pingList.push({
+								pinY: ele.pinYinInitial,
+								list: [ele]
+							})
+						} else {
+							obj2.pingList[index].list.push(ele)
+						}
+					} else if (ele.continent_name == 'SA') {
+						obj3.Shouping.push(ele.pinYinInitial)
+						obj3.Shouping = [...new Set(obj3.Shouping)]
+						obj3.Shouping.sort((a, b) => {
+							return a.toLowerCase().localeCompare(b.toLowerCase());
+						})
+						var index = obj3.pingList.findIndex(item => item.pinY == ele.pinYinInitial)
+						if (index == -1) { //说明arr中不存在id为objid的对象
+							obj3.pingList.push({
+								pinY: ele.pinYinInitial,
+								list: [ele]
+							})
+						} else {
+							obj3.pingList[index].list.push(ele)
+						}
+					} else if (ele.continent_name == 'OA') {
+						obj4.Shouping.push(ele.pinYinInitial)
+						obj4.Shouping = [...new Set(obj4.Shouping)]
+						obj4.Shouping.sort((a, b) => {
+							return a.toLowerCase().localeCompare(b.toLowerCase());
+						})
+						var index = obj4.pingList.findIndex(item => item.pinY == ele.pinYinInitial)
+						if (index == -1) { //说明arr中不存在id为objid的对象
+							obj4.pingList.push({
+								pinY: ele.pinYinInitial,
+								list: [ele]
+							})
+						} else {
+							obj4.pingList[index].list.push(ele)
+						}
+					} else if (ele.continent_name == 'EU') {
+						obj5.Shouping.push(ele.pinYinInitial)
+						obj5.Shouping = [...new Set(obj5.Shouping)]
+						obj5.Shouping.sort((a, b) => {
+							return a.toLowerCase().localeCompare(b.toLowerCase());
+						})
+						var index = obj5.pingList.findIndex(item => item.pinY == ele.pinYinInitial)
+						if (index == -1) { //说明arr中不存在id为objid的对象
+							obj5.pingList.push({
+								pinY: ele.pinYinInitial,
+								list: [ele]
+							})
+						} else {
+							obj5.pingList[index].list.push(ele)
+						}
+					} else if (ele.continent_name == 'AF') {
+						obj6.Shouping.push(ele.pinYinInitial)
+						obj6.Shouping = [...new Set(obj6.Shouping)]
+						obj6.Shouping.sort((a, b) => {
+							return a.toLowerCase().localeCompare(b.toLowerCase());
+						})
+						var index = obj6.pingList.findIndex(item => item.pinY == ele.pinYinInitial)
+						if (index == -1) { //说明arr中不存在id为objid的对象
+							obj6.pingList.push({
+								pinY: ele.pinYinInitial,
+								list: [ele]
+							})
+						} else {
+							obj6.pingList[index].list.push(ele)
+						}
+					}
+				}
+			})
+
+			this.countryList = [obj1, obj2, obj3, obj4, obj5, obj6]
+			this.countryList.forEach(ele => {
+				ele.pingList.sort(propComparator('pinY'));
+			})
+			console.log(this.countryList)
+			this.anchorArr = this.countryList[0].Shouping
+		},
+		methods: {
+			clickAnchor(item) {
+				this.scrollIntoId = item
+			},
+			// 点击城市
+			onSelect(city) {
+				this.$emit('onSelect', city)
+			},
+			// 开始滑动
+			start(e) {
+				// console.log("开始滑动",e);
+				// #ifdef MP
+				let eY = e.changedTouches[0].clientY
+				// #endif
+				// #ifdef APP-PLUS
+				let eY = e.changedTouches[0].screenY
+				// #endif
+				this.startY = eY;
+				// 计算点击时候下标
+				let index = eY / (uni.upx2px(eY) / eY);
+				index = parseInt((index - 200) / 40) - 1;
+				this.downIndex = index;
+				// console.log(this.scrollIntoId)
+			},
+			// 点击左边的栏目切换
+			async swichMenu(index) {
+				if (index == this.current) return;
+				this.current = index;
+				// // 如果为0，意味着尚未初始化
+				// if (this.menuHeight == 0 || this.menuItemHeight == 0) {
+				// 	await this.getElRect('menu-scroll-view', 'menuHeight');
+				// 	await this.getElRect('u-tab-item', 'menuItemHeight');
+				// }
+				// // 将菜单菜单活动item垂直居中
+				// this.scrollTop = index * this.menuItemHeight + this.menuItemHeight / 2 - this.menuHeight / 2;
+				this.anchorArr = this.countryList[index].Shouping
+				console.log(this.anchorArr)
+				this.scrollIntoId = 'current'
+			},
+			// 获取一个目标元素的高度
+			getElRect(elClass, dataVal) {
+				new Promise((resolve, reject) => {
+					const query = uni.createSelectorQuery().in(this);
+					query.select('.' + elClass).fields({
+						size: true
+					}, res => {
+						// 如果节点尚未生成，res值为null，循环调用执行z`
+						if (!res) {
+							setTimeout(() => {
+								this.getElRect(elClass);
+							}, 10);
+							return;
+						}
+						this[dataVal] = res.height;
+					}).exec();
+				})
+			}
+		}
+	}
+</script>
+
+<style scoped lang="scss">
+	.nav1-1 {
+		background: #F8FAFF !important;
+		display: flex;
+		align-items: center;
+		border-radius: 30rpx;
+		padding: 0 32rpx !important;
+		margin: 0 32rpx 48rpx 32rpx;
+	}
+
+	// /deep/ .u-input {
+	// 	background: #f4f4f5 !important;
+	// 	border-radius: 30rpx;
+	// 	width: 578rpx;
+	// 	margin-left: 20rpx;
+	// 	// padding: 0 30rpx !important;
+	// }
+	/deep/ .u-input__input {
+		width: 540rpx !important;
+	}
+
+	.select-city-wrap {
+		overflow: hidden;
+	}
+
+	/* 滑块 */
+	.scroll {
+		/* background-color: yellow; */
+	}
+
+	.name {
+		color: #999;
+		font-size: 24rpx;
+		margin: 30rpx 32rpx;
+	}
+
+	/* 城市 */
+	.letter {
+		margin-bottom: 30rpx;
+		margin-left: 32rpx;
+		font-size: 24rpx;
+		font-family: PingFangSC, PingFangSC-Regular;
+		font-weight: 400;
+		text-align: left;
+		color: #121212;
+		line-height: 34rpx;
+	}
+
+	.city-item {
+		display: flex;
+		flex-wrap: wrap;
+		flex-direction: row;
+		margin-left: 22rpx;
+	}
+
+	.city-item-view {
+		width: 200rpx;
+		height: 56rpx;
+		background: #f8faff;
+		border-radius: 4rpx;
+		margin: 10rpx;
+		justify-content: center;
+		align-items: center;
+		display: flex;
+	}
+
+	.city-item-viewa {
+		/* width: 180rpx;
+	height: 55rpx;
+	margin: 15rpx;
+	border: 1rpx solid #2f9bfe;
+	border-radius: 6rpx;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background-color: #d5ebff; */
+		width: 200rpx;
+		height: 56rpx;
+		background: #f8faff;
+		border-radius: 4rpx;
+		margin: 10rpx;
+		justify-content: center;
+		align-items: center;
+		display: flex;
+	}
+
+	.city-item-text {
+		font-size: 28rpx;
+		font-family: PingFangSC, PingFangSC-Regular;
+		font-weight: 400;
+		color: #121212;
+	}
+
+	.city-item-texta {
+		/* font-size: 28rpx;
+	color: #2f9bfe; */
+		font-size: 28rpx;
+		font-family: PingFangSC, PingFangSC-Regular;
+		font-weight: 400;
+		color: #121212;
+	}
+
+	/* 右锚点 */
+	.anchor {
+		/* background-color: pink; */
+		position: fixed;
+		right: 12rpx;
+		top: 380rpx;
+		z-index: 10;
+		flex-direction: row;
+	}
+
+	.anchor-item {
+		align-items: center;
+		flex-direction: row;
+		height: 40rpx;
+		text-align: center;
+	}
+
+	.anchor-text-position {
+		height: 40rpx;
+		width: 40rpx;
+		text-align: center;
+		line-height: 40rpx;
+		font-size: 32rpx;
+		color: #333;
+		background-color: #E5E5E5;
+		border-radius: 20rpx;
+	}
+
+	.anchor-text {
+		line-height: 40rpx;
+		padding: 0 15rpx;
+		color: #121212;
+		font-size: 20rpx;
+		font-family: PingFangSC, PingFangSC-Regular;
+		font-weight: 400;
+	}
+
+	//
+	.u-wrap {
+		height: calc(100vh);
+		display: flex;
+		flex-direction: column;
+	}
+
+	.u-search-box {
+		padding: 18rpx 30rpx;
+	}
+
+	.u-menu-wrap {
+		flex: 1;
+		display: flex;
+		overflow: hidden;
+		height: calc(100vh - 216rpx) !important;
+	}
+
+	.u-search-inner {
+		background-color: rgb(234, 234, 234);
+		border-radius: 100rpx;
+		display: flex;
+		align-items: center;
+		padding: 10rpx 16rpx;
+	}
+
+	.u-search-text {
+		font-size: 26rpx;
+		margin-left: 10rpx;
+	}
+
+	.u-tab-view {
+		width: 218rpx;
+		height: calc(100vh - 148rpx) !important;
+		overflow-y: scroll;
+		// background: #f8faff;
+		background: #fff;
+	}
+
+	.u-tab-item {
+		position: relative;
+		height: 110rpx;
+		box-sizing: border-box;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 28rpx;
+		color: #000;
+		font-weight: 400;
+		line-height: 40rpx;
+		background: #f8faff;
+
+		.numBox {
+			position: absolute;
+			right: 10rpx;
+			top: 50%;
+			width: 30rpx;
+			height: 30rpx;
+			transform: translateY(-50%);
+			background: #095bfe;
+			border-radius: 50%;
+			font-size: 20rpx;
+			font-family: PingFangSC, PingFangSC-Regular;
+			font-weight: 400;
+			text-align: center;
+			line-height: 30rpx;
+			color: #ffffff;
+		}
+	}
+
+	.u-tab-item.i_jian1 {
+		background: #f8faff;
+		border-radius: 0rpx 0rpx 20rpx 0rpx;
+	}
+
+	.u-tab-item.i_jia1 {
+		background: #f8faff;
+		border-radius: 0rpx 20rpx 0rpx 0rpx;
+	}
+
+	.u-tab-item-active {
+		position: relative;
+		color: #dd6161;
+		background: #fff;
+		font-size: 28rpx;
+		font-family: PingFangSC, PingFangSC-Medium;
+		font-weight: 600;
+		color: #000000;
+
+		.after {
+			position: absolute;
+			left: 0;
+			top: 50%;
+			transform: translateY(-50%);
+			width: 4rpx;
+			height: 32rpx;
+			background: #1362fd;
+		}
+	}
+
+	.u-line-1 {
+		width: 156rpx;
+		white-space: pre-wrap;
+	}
+
+
+	.u-tab-view {
+		height: 100%;
+	}
+
+	.right-box {
+		width: 546rpx;
+		height: calc(100vh - 216rpx);
+		border-radius: 16rpx;
+		background-color: #fff;
+	}
+
+	.page-view {
+		// padding: 16rpx;
+		// padding-bottom: 20rpx;
+		padding: 0 32rpx;
+
+		.xx {
+			margin-top: 20rpx;
+			font-size: 24rpx;
+			font-family: PingFangSC, PingFangSC-Regular;
+			font-weight: 400;
+			text-align: left;
+			color: #999999;
+		}
+	}
+
+	.class-item {
+		background-color: #fff;
+		padding: 0 34rpx 0 0;
+		border-radius: 8rpx;
+	}
+
+	.item-title {
+		padding-top: 26rpx;
+		font-size: 26rpx;
+		font-weight: bold;
+		margin-bottom: 42rpx;
+		margin-left: 14rpx;
+	}
+
+	.item-title2 {
+		padding-top: 20rpx;
+		margin-bottom: 0rpx;
+		font-size: 24rpx;
+		font-family: PingFangSC, PingFangSC-Regular;
+		font-weight: 400;
+		color: #121212;
+	}
+
+	.item-menu-name {
+		font-weight: normal;
+		font-size: 24rpx;
+	}
+
+	.item-container {
+
+		// display: flex;
+		// flex-wrap: wrap;
+		// // justify-content: space-between;
+		.txt1 {
+			height: 86rpx;
+			line-height: 86rpx;
+			border-bottom: 2rpx solid #ececec;
+		}
+	}
+
+	.thumb-box {
+		width: 33.333333%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-direction: column;
+		// margin-top: 20rpx;
+		margin-bottom: 42rpx;
+	}
+
+	.thumb-box2 {
+		height: 86rpx;
+		// width: 100%;
+		// display: flex;
+		margin-bottom: 42rpx;
+		border-bottom: 2rpx soild #f40;
+		// &:nth-child(2n) {
+		// 	margin-left: 20rpx;
+		// }
+
+		.item-menu-image2 {
+			width: 174rpx;
+			height: 124rpx;
+		}
+
+		.box-right.blue {
+			background: #1362fd;
+
+			.txt1 {
+				color: #ffffff !important;
+			}
+		}
+
+		.box-right {
+			width: 228rpx;
+			height: 100%rpx;
+			// background: #f8faff;
+			border-radius: 4rpx;
+
+			.txt1 {
+				line-height: 86rpx;
+				text-align: center;
+				font-size: 26rpx;
+				font-family: PingFangSC, PingFangSC-Regular;
+				font-weight: 400;
+				color: #121212;
+			}
+
+			.txt2 {
+				font-size: 20rpx;
+				font-family: Segoe UI;
+				font-weight: 400;
+				line-height: 28rpx;
+				color: #666666;
+			}
+
+			.txt3 {
+				font-size: 24rpx;
+				font-family: Segoe UI;
+				font-weight: 400;
+				line-height: 38rpx;
+
+				color: #dd6161;
+			}
+		}
+	}
+
+	.item-menu-image {
+		width: 125rpx;
+		height: 125rpx;
+		margin-bottom: 6rpx;
+	}
+
+	// 
+	.footer {
+		position: fixed;
+		bottom: 0;
+		width: 750rpx;
+		height: 184rpx;
+		background: #ffffff;
+		box-shadow: 0rpx -4rpx 8rpx 0rpx rgba(0, 0, 0, 0.03);
+		display: flex;
+
+		.b1 {
+			width: 308rpx;
+			height: 72rpx;
+			border: 2rpx solid #1362fd;
+			border-radius: 48rpx;
+			font-size: 32rpx;
+			font-family: PingFangSC, PingFangSC-Medium;
+			font-weight: 500;
+			text-align: center;
+			color: #1362fd;
+			line-height: 68rpx;
+			margin: 38rpx 32rpx 0 52rpx;
+		}
+
+		.b2 {
+			width: 306rpx;
+			height: 72rpx;
+			background: #1362fd;
+			border-radius: 48rpx;
+			font-size: 32rpx;
+			font-family: PingFangSC, PingFangSC-Medium;
+			font-weight: 500;
+			text-align: center;
+			color: #fff;
+			line-height: 72rpx;
+			margin-top: 38rpx;
+		}
+	}
+</style>

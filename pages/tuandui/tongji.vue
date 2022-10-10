@@ -9,13 +9,13 @@
 			<view class="fi2-txt">{{pop_title}}</view>
 			<u-icon style='transform: rotate(90deg);' name="play-right-fill" color="#fffbfb" size="14"></u-icon>
 		</view>
-		<popover class="popov" @select='changePop' :btnList='popoverList' :modalLeftPos='"-20rpx"' :modalTopPos='"-10rpx"'
-			:modalOpacity='"1"' :active="popover"></popover>
+		<popover class="popov" @select='changePop' :btnList='popoverList' :modalLeftPos='"-20rpx"'
+			:modalTopPos='"-10rpx"' :modalOpacity='"1"' :active="popover"></popover>
 		<view style="margin-top: calc(176rpx + 32rpx);" class="nav2">
 			<view class="table">
 				<view class="n2t-n1">
-					<view class="left1">岗位</view>
-					<view class="left2">投入人数</view>
+					<view class="left1">成员</view>
+					<view class="left2">做单个数</view>
 					<view class="center">
 						<view class="c-top">网搜</view>
 						<view class="c-bottom">
@@ -27,10 +27,10 @@
 							</view>
 						</view>
 					</view>
-					<view class="right1">应聘</view>
-					<view class="right2">状态</view>
+					<view class="right1">转发应聘</view>
 				</view>
-				<view class="n2t-n2" :style="{borderBottom:item.id == list[list.length-1].id?'0':''}" v-for="(item,i) in list" :key='item.id'>
+				<view class="n2t-n2" :style="{borderBottom:item.id == list[list.length-1].id?'0':''}"
+					v-for="(item,i) in list" :key='item.id'>
 					<view class="x1">刘树昌</view>
 					<view class="x11">8</view>
 					<view class="x2">
@@ -38,13 +38,7 @@
 						<view :style="{borderTop:i == 0?'0':''}" class="x2-2">16</view>
 					</view>
 					<view class="x3">8</view>
-					<view class="x33"  @click="clickJJ(i)">
-						<view class="tttx">紧急</view>
-						<u-icon style='transform: rotate(90deg);' name="play-right-fill" color="#FF5C50" size="16"></u-icon>
-						<popover v-if="nowIndex == i" class="popov" @select='changePop1' :btnList='popoverList1' :modalLeftPos='"-20rpx"' :modalTopPos='"-10rpx"'
-						:modalOpacity='"1"' :active="popover1"></popover>
-					</view>
-					
+
 				</view>
 			</view>
 		</view>
@@ -59,20 +53,20 @@
 		},
 		data() {
 			return {
-				nowIndex:-1,
-				list:[],
-				popoverList:['今天','本周','上周','累计'],
-				popoverList1:['紧急','正常','一般'],
-				popover:false,
-				popover1:false,
-				pop_title:'今天',
+				nowIndex: -1,
+				list: [],
+				popoverList: ['今天', '本周', '上周', '本月','上月','今年'],
+				popoverList1: ['紧急', '正常', '一般'],
+				popover: false,
+				popover1: false,
+				pop_title: '今天',
 			}
 		},
 		onShow() {
-			for(let i = 0;i<50;i++){
+			for (let i = 0; i < 50; i++) {
 				this.list.push({
-					val:`name${i}`,
-					id:i
+					val: `name${i}`,
+					id: i
 				})
 			}
 		},
@@ -80,11 +74,11 @@
 
 		},
 		methods: {
-			clickJJ(i){
+			clickJJ(i) {
 				this.nowIndex = i;
 				this.popover1 = true
 			},
-			changePop1(e){
+			changePop1(e) {
 				console.log(e)
 				this.popover1 = false
 			},
@@ -120,15 +114,18 @@
 		width: 100%;
 		background: #ffffff;
 	}
-	/deep/ .compos{
+
+	/deep/ .compos {
 		position: fixed !important;
-		bottom: 516rpx;
+		bottom: 600rpx;
 		right: 20rpx;
 		width: 200rpx;
+
 		.modal-item {
 			padding: 18rpx 50rpx !important;
 		}
 	}
+
 	.nav1 {
 		z-index: 1000;
 		position: fixed;
@@ -150,20 +147,22 @@
 			font-weight: 800 !important;
 		}
 	}
-	.float-img2{
+
+	.float-img2 {
 		position: fixed;
 		right: 42rpx;
-		bottom: 534rpx;
+		bottom: 612rpx;
 		width: 88rpx;
 		height: 88rpx;
-		background: linear-gradient(180deg,#f0e1b9, #f39f47);
+		background: linear-gradient(180deg, #f0e1b9, #f39f47);
 		border-radius: 50%;
-		box-shadow: 0rpx 8rpx 8rpx 0rpx rgba(241,203,105,0.40); 
+		box-shadow: 0rpx 8rpx 8rpx 0rpx rgba(241, 203, 105, 0.40);
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		z-index: 99;
-		.fi2-txt{
+
+		.fi2-txt {
 			font-size: 24rpx;
 			font-family: PingFangSC, PingFangSC-Medium;
 			font-weight: 500;
@@ -171,6 +170,7 @@
 			margin-right: 6rpx;
 		}
 	}
+
 	.nav2 {
 		padding: 0 32rpx 60rpx 32rpx;
 
@@ -187,6 +187,7 @@
 				height: 120rpx;
 				border-radius: 8rpx;
 				font-size: 26rpx;
+
 				.left1 {
 					width: 227rpx;
 					text-align: center;
@@ -194,9 +195,10 @@
 					color: #fff;
 					border-right: 2rpx solid #88abfc;
 				}
+
 				.left2 {
-					padding: 0 16rpx;
-					width: 88rpx;
+					padding: 0 26rpx;
+					width: 114rpx;
 					display: flex;
 					align-items: center;
 					justify-content: center;
@@ -208,7 +210,7 @@
 				}
 
 				.center {
-					width: 184rpx;
+					width: 227rpx;
 					height: 100%;
 
 					.c-top {
@@ -249,18 +251,16 @@
 				}
 
 				.right1 {
-					width: 90rpx;
+					width: 114rpx;
 					text-align: center;
-					line-height: 120rpx;
 					color: #fff;
 					border-left: 2rpx solid #88abfc;
-				}
-				.right2 {
-					width: 90rpx;
+					padding: 0 20rpx;
+					display: flex;
+					align-items: center;
+					justify-content: center;
 					text-align: center;
-					line-height: 120rpx;
-					color: #fff;
-					border-left: 2rpx solid #88abfc;
+					height: 100%;
 				}
 			}
 
@@ -269,6 +269,7 @@
 				height: 70rpx;
 				color: #121212;
 				border-bottom: 2rpx solid #1362fd;
+
 				.x1 {
 					width: 225rpx;
 					line-height: 70rpx;
@@ -278,8 +279,9 @@
 					font-weight: 400;
 					color: #1362fd;
 				}
-				.x11{
-					width: 88rpx;
+
+				.x11 {
+					width: 114rpx;
 					line-height: 70rpx;
 					text-align: center;
 					font-size: 26rpx;
@@ -288,11 +290,13 @@
 					color: #1362fd;
 					border-left: 2rpx solid #1362fd;
 				}
+
 				.x2 {
 					display: flex;
 					align-items: center;
-					width: 188rpx;
-					.x2-1{
+					width: 232rpx;
+
+					.x2-1 {
 						width: 50%;
 						text-align: center;
 						line-height: 70rpx;
@@ -300,7 +304,8 @@
 						font-size: 26rpx;
 						background: #8bb0fb;
 					}
-					.x2-2{
+
+					.x2-2 {
 						width: 50%;
 						text-align: center;
 						line-height: 70rpx;
@@ -311,16 +316,17 @@
 						background: #e7efff;
 					}
 				}
+
 				.x3 {
-					width: 90rpx;
+					width: 114rpx;
 					line-height: 70rpx;
 					text-align: center;
 					font-size: 26rpx;
 					font-family: PingFangSC, PingFangSC-Regular;
 					font-weight: 400;
 					color: #121212;
-					border-right: 2rpx solid #1362fd;
 				}
+
 				.x33 {
 					width: 90rpx;
 					line-height: 70rpx;
@@ -332,7 +338,8 @@
 					display: flex;
 					align-items: center;
 					justify-content: center;
-					.tttx{
+
+					.tttx {
 						margin-right: 2rpx;
 						font-size: 24rpx;
 					}
