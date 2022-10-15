@@ -18,7 +18,8 @@
 						<view class="t2-1-left">销售经理</view>
 						<view class="t2-1-right">
 							<view class="t2-1-r-txt1">10-20K*15薪</view>
-							<image @click="closeBtn(item)" style="width: 40rpx;height: 40rpx;" src="/static/newImage/tabBar/zu11.png" mode="">
+							<image @click="closeBtn(item)" style="width: 40rpx;height: 40rpx;"
+								src="/static/newImage/tabBar/zu11.png" mode="">
 							</image>
 						</view>
 					</view>
@@ -34,9 +35,20 @@
 								style='margin-left: 6rpx;transform: translateY(2rpx);' name="play-right-fill"
 								color="#095bfe" size="18"></u-icon>
 						</view>
-						<mypopover ref='pop' v-if="i == openIndex" class="popov1" @select='changePop'
-							:modalLeftPos='"-244rpx"' :modalTopPos='modalTopPos' :modalOpacity='"1"' :active="popover">
-						</mypopover>
+						<!-- 管理员 -->
+						<template v-if="isGLY">
+							<mypopover ref='pop' v-if="i == openIndex" class="popov1" @select='changePop'
+								:modalLeftPos='"-244rpx"' :modalTopPos='modalTopPos' :modalOpacity='"1"'
+								:active="popover">
+							</mypopover>
+						</template>
+						<!-- 非管理员 -->
+						<template v-if="!isGLY">
+							<mypopover2 ref='pop' v-if="i == openIndex" class="popov1" @select='changePop'
+								:modalLeftPos='"-244rpx"' :modalTopPos='modalTopPos' :modalOpacity='"1"'
+								:active="popover">
+							</mypopover2>
+						</template>
 					</view>
 					<view class="heng"></view>
 				</view>
@@ -44,27 +56,30 @@
 		</view>
 		<u-modal :show-title='false' :show-cancel-button='true' v-model="modshow1" content="确认删除"></u-modal>
 		<u-tabbar active-color="#121212" icon-size='60' height='120' mid-button-size="150" v-model="current"
-			:list="tabbarlist" :mid-button="true"></u-tabbar>
+			:list="tabbarlist" @change='changeTabbar' :mid-button="true"></u-tabbar>
 
 	</view>
 </template>
 
 <script>
 	import mypopover from "@/components/my-popover/dean-popover.vue"
+	import mypopover2 from "@/components/my-popover/dean-popover2.vue"
 	import {
 		mapGetters,
 		mapState
 	} from "vuex";
 	export default {
 		components: {
-			mypopover
+			mypopover,
+			mypopover2
 		},
 		computed: {
 			...mapGetters(['isLogin'])
 		},
 		data() {
 			return {
-				modshow1:false,
+				isGLY: false,
+				modshow1: false,
 				modalTopPos: '26rpx',
 				maskshow: false,
 				openIndex: -1,
@@ -90,7 +105,7 @@
 						// text: '发布',
 						midButton: true,
 						customIcon: false,
-						pagePath: "/pages/gangwei/chuanjiangangwei"
+						// pagePath: "/pages/gangwei/chuanjiangangwei"
 					},
 					{
 						iconPath: "/static/newImage/tabBarIcon/3-1.png",
@@ -121,7 +136,14 @@
 		// 	}
 		// },
 		methods: {
-			closeBtn(item){
+			changeTabbar(i) {
+				if (i == 2) {
+					uni.navigateTo({
+						url: '/pages/gangwei/chuanjiangangwei'
+					})
+				}
+			},
+			closeBtn(item) {
 				console.log(item)
 				this.modshow1 = true
 			},
@@ -145,14 +167,17 @@
 				this.openIndex = i
 				this.modalTopPos = '26rpx'
 				setTimeout(() => {
-					// console.log(this.$refs.pop[0])
 					this.$refs.pop[0].getTop();
-					// this.popover = true
 				}, 100)
 			},
 			changePop(e) {
 				console.log(e, e.scollTop, 123)
-				this.modalTopPos = e.scollTop > 570 ? '-380rpx' : '26rpx'
+				if(this.isGLY){
+					this.modalTopPos = e.scollTop > 570 ? '-380rpx' : '26rpx'
+				}else{
+					this.modalTopPos = e.scollTop > 640 ? '-246rpx' : '26rpx'
+				}
+				
 				this.maskshow = e.isclose ? false : true
 				if (e.val == '应聘') {
 					uni.navigateTo({

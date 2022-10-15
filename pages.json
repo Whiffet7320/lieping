@@ -27,12 +27,27 @@
 				"navigationStyle": "custom"
 			}
 		},{
+			"path": "pages/tabBar/qzz_sy",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},{
 			"path": "pages/gangwei/chuanjiangangwei",
 			"style": {
 				"navigationStyle": "custom"
 			}
 		},{
 			"path": "pages/gangwei/xuanzechengshi",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},{
+			"path": "pages/gangwei/chakangangwei",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},{
+			"path": "pages/gangwei/searchPage",
 			"style": {
 				"navigationStyle": "custom"
 			}
@@ -46,12 +61,22 @@
 				"navigationStyle": "custom"
 			}
 		},{
+			"path": "chakandaohang",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},{
 			"path": "waiyu",
 			"style": {
 				"navigationStyle": "custom"
 			}
 		},{
 			"path": "xuanzegangwei",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},{
+			"path": "xuanzefenlei",
 			"style": {
 				"navigationStyle": "custom"
 			}
@@ -82,6 +107,25 @@
 		}]
 	},
 	{
+		"root": "pages/qzz",
+		"pages": [{
+			"path": "zhiweixiangqin",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},{
+			"path": "pipeidu",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},{
+			"path": "ceshipipeidu",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		}]
+	},
+	{
 		"root": "pages/wode",
 		"pages": [{
 			"path": "renzheng",
@@ -103,6 +147,16 @@
 			"style": {
 				"navigationStyle": "custom"
 			}
+		},{
+			"path": "xuanzeshenfen",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},{
+			"path": "yonghuxieyi",
+			"style": {
+				"navigationStyle": "custom"
+			}
 		}]
 	},
 	{
@@ -115,146 +169,8 @@
 				"navigationBarTextStyle": "black"
 			}
 		}]
-	},
-	{
-		"root": "pages/user",
-		"pages": [
-			{
-				"path": "set/index",
-				"style": {
-					"navigationBarTitleText": "设置"
-				}
-			},
-			{
-				"path": "set/uname",
-				"style": {
-					"navigationBarTitleText": "更改昵称"
-				}
-			},
-			{
-				"path": "set/pwd",
-				"style": {
-					"navigationBarTitleText": "设置登陆密码"
-				}
-			},
-			{
-				"path": "set/zhifumima",
-				"style": {
-					"navigationBarTitleText": "设置支付密码",
-					"navigationBarBackgroundColor": "#ffffff",
-					"navigationBarTextStyle": "black"
-				}
-			},
-			{
-				"path": "address/index",
-				"style": {
-					"navigationBarTitleText": "收货地址"
-				}
-			},
-			{
-				"path": "address/detail",
-				"style": {
-					"navigationBarTitleText": "新建地址"
-				}
-			},
-			{
-				"path": "bank/index",
-				"style": {
-					"navigationBarTitleText": "银行卡"
-				}
-			},
-			{
-				"path": "bank/detail",
-				"style": {
-					"navigationBarTitleText": "绑定银行卡"
-				}
-			},
-			{
-				"path": "certificate/index",
-				"style": {
-					"navigationBarTitleText": "实名认证"
-				}
-			},
-			{
-				"path": "privacy/index",
-				"style": {
-					"navigationBarTitleText": "隐私条款"
-				}
-			},
-			{
-				"path": "agreement/index",
-				"style": {
-					"navigationBarTitleText": "用户协议"
-				}
-			},
-			{
-				"path": "tixian/tixian",
-				"style": {
-					"navigationStyle": "custom",
-					"enablePullDownRefresh": true
-				}
-			},
-			{
-				"path": "tixian/jifentixian",
-				"style": {
-					"navigationBarTitleText": "积分提现",
-					"navigationBarBackgroundColor": "#ffffff",
-					"navigationBarTextStyle": "black"
-				}
-			},
-			{
-				"path": "tixian/zhifumima",
-				"style": {
-					"navigationBarTitleText": "支付密码",
-					"navigationBarBackgroundColor": "#ffffff",
-					"navigationBarTextStyle": "black"
-				}
-			},
-			{
-				"path": "jifen/wodejifen",
-				"style": {
-					"navigationStyle": "custom",
-					"enablePullDownRefresh": true
-				}
-			},
-			{
-				"path": "qianbao/qianbao",
-				"style": {
-					"navigationStyle": "custom",
-					"enablePullDownRefresh": true
-				}
-			},{
-				"path": "qianbao/chongzhi",
-				"style": {
-					"navigationStyle": "custom"
-				}
-			},
-			{
-				"path": "order/order",
-				"style": {
-					"navigationBarTitleText": "我的订单",
-					"navigationBarBackgroundColor": "#ffffff",
-					"navigationBarTextStyle": "black"
-				}
-			},
-			{
-				"path": "order/detail",
-				"style": {
-					"navigationBarTitleText": "订单详情",
-					"navigationBarBackgroundColor": "#ffffff",
-					"navigationBarTextStyle": "black"
-				}
-			},
-			{
-				"path": "order/wuliu",
-				"style": {
-					"navigationBarTitleText": "物流信息",
-					"navigationBarBackgroundColor": "#ffffff",
-					"navigationBarTextStyle": "black"
-				}
-			}
-		]
-	}],
+	}
+	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "螃蟹商城",
@@ -284,11 +200,6 @@
 			// "text": "免单"
 		}, {
 			"pagePath": "pages/tabBar/wode"
-			// "iconPath": "static/miandan.png",
-			// "selectedIconPath": "static/miandan-active.png",
-			// "text": "免单"
-		}, {
-			"pagePath": "pages/gangwei/chuanjiangangwei"
 			// "iconPath": "static/miandan.png",
 			// "selectedIconPath": "static/miandan-active.png",
 			// "text": "免单"

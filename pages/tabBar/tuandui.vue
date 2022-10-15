@@ -11,9 +11,15 @@
 				<u-icon name="bell" color="#707070" size="32"></u-icon>
 				<view class="n2-l-txt1">仅您的公司管理员有权限</view>
 			</view>
-			<view class="n2-r" @click="yaoqing">
+			<!-- 管理员 -->
+			<view v-if="isGly" class="n2-r" @click="yaoqing">
 				<view class="n2-r-txt1">邀请成员</view>
 				<u-icon name="man-add" color="#121212" size="28"></u-icon>
+			</view>
+			<!-- 非管理员 -->
+			<view v-if="!isGly" class="n2-r no">
+				<view class="n2-r-txt1">邀请成员</view>
+				<u-icon name="man-add" color="#ffffff" size="28"></u-icon>
 			</view>
 		</view>
 		<view class="items">
@@ -24,17 +30,27 @@
 							src="https://img0.baidu.com/it/u=2067542421,2346290285&fm=253&fmt=auto&app=138&f=JPEG?w=450&h=450"
 							mode=""></image>
 						<view class="i-l-txt1">陈冠希</view>
+						<!-- 非管理员 -->
+						<template v-if="!isGly">
+							<view class="yuan"></view>
+							<view class="y-txt">管理员</view>
+						</template>
 					</view>
 					<view class="i-r">
-						<view class="i-r-b1" @click="clickggl(i)">
-							<view class="i-r-b1-txt">{{pop1_title}}</view>
-							<u-icon style='transform: rotate(90deg);' name="play-right-fill" color="#fffbfb" size="18">
-							</u-icon>
-						</view>
-						<popover v-if="i == nowIndex" @select='changePop1' :btnList='popoverList1'
-							:modalLeftPos='"-166rpx"' :modalTopPos='"26rpx"' :modalOpacity='"1"' :active="popover1">
-						</popover>
-						<view class="i-r-b2" @click="del(item)">删除</view>
+						<!-- 管理员 -->
+						<template v-if="isGly">
+							<view class="i-r-b1" @click="clickggl(i)">
+								<view class="i-r-b1-txt">{{pop1_title}}</view>
+								<u-icon style='transform: rotate(90deg);' name="play-right-fill" color="#fffbfb"
+									size="18">
+								</u-icon>
+							</view>
+							<popover v-if="i == nowIndex" @select='changePop1' :btnList='popoverList1'
+								:modalLeftPos='"-166rpx"' :modalTopPos='"26rpx"' :modalOpacity='"1"' :active="popover1">
+							</popover>
+							<view class="i-r-b2" @click="del(item)">删除</view>
+						</template>
+
 						<image @click="xialaClick(item)"
 							:style="{transform:!item.isClick?'rotate(0deg)':'rotate(180deg)'}" class="i-r-b3"
 							src="/static/newImage/tabBar/zu2.png" mode="">
@@ -80,7 +96,9 @@
 		<u-popup v-model="pop1show" mode='center' border-radius='10' :closeable='true'>
 			<view class="pop1">
 				<view class="p1-tit1">邀请成员</view>
-				<image class="p1-img" src="https://img0.baidu.com/it/u=2067542421,2346290285&fm=253&fmt=auto&app=138&f=JPEG?w=450&h=450" mode=""></image>
+				<image class="p1-img"
+					src="https://img0.baidu.com/it/u=2067542421,2346290285&fm=253&fmt=auto&app=138&f=JPEG?w=450&h=450"
+					mode=""></image>
 				<view class="p1-box">
 					<view class="txtx1">陈冠希</view>
 					<view class="txtx2">
@@ -97,7 +115,7 @@
 		</u-popup>
 		<u-modal :show-title='false' :show-cancel-button='true' v-model="modshow1" content="确认删除"></u-modal>
 		<u-tabbar active-color="#121212" icon-size='60' height='120' mid-button-size="150" v-model="current"
-			:list="tabbarlist" :mid-button="true"></u-tabbar>
+			:list="tabbarlist" @change='changeTabbar' :mid-button="true"></u-tabbar>
 	</view>
 </template>
 
@@ -109,8 +127,9 @@
 		},
 		data() {
 			return {
-				modshow1:false,
-				pop1show:false,
+				isGly:false,
+				modshow1: false,
+				pop1show: false,
 				nowIndex: '',
 				popoverList1: ['管理员', '成员'],
 				popover1: false,
@@ -173,15 +192,22 @@
 			}
 		},
 		methods: {
-			toTongji(){
+			changeTabbar(i) {
+				if (i == 2) {
+					uni.navigateTo({
+						url: '/pages/gangwei/chuanjiangangwei'
+					})
+				}
+			},
+			toTongji() {
 				uni.navigateTo({
-					url:'/pages/tuandui/tongji'
+					url: '/pages/tuandui/tongji'
 				})
 			},
 			yaoqing() {
 				this.pop1show = true
 			},
-			del(item){
+			del(item) {
 				console.log(item)
 				this.modshow1 = true;
 			},
@@ -305,6 +331,14 @@
 				margin-right: 4rpx;
 			}
 		}
+
+		.n2-r.no {
+			background: #999999;
+
+			.n2-r-txt1 {
+				color: #ffffff;
+			}
+		}
 	}
 
 	.items {
@@ -343,6 +377,22 @@
 						font-family: PingFangSC, PingFangSC-Regular;
 						font-weight: 400;
 						color: #121212;
+					}
+					
+					.yuan {
+						margin-left: 16rpx;
+						width: 12rpx;
+						height: 12rpx;
+						background: #7ca8f4;
+						border-radius: 50%;
+					}
+					
+					.y-txt {
+						margin-left: 8rpx;
+						font-size: 24rpx;
+						font-family: PingFangSC, PingFangSC-Regular;
+						font-weight: 400;
+						color: #7ca8f4;
 					}
 				}
 
@@ -538,15 +588,17 @@
 			}
 		}
 	}
-	.pop1{
+
+	.pop1 {
 		position: relative;
 		width: 624rpx;
 		height: 638rpx;
 		background: #dee9ff;
+
 		// display: flex;
 		// flex-direction: column;
 		// align-items: center;
-		.p1-tit1{
+		.p1-tit1 {
 			font-size: 36rpx;
 			font-family: PingFangSC, PingFangSC-Medium;
 			font-weight: 600;
@@ -554,7 +606,8 @@
 			color: #121212;
 			padding-top: 48rpx;
 		}
-		.p1-img{
+
+		.p1-img {
 			position: absolute;
 			width: 132rpx;
 			height: 132rpx;
@@ -564,7 +617,8 @@
 			border: 4rpx solid #fff;
 			border-radius: 50%;
 		}
-		.p1-box{
+
+		.p1-box {
 			z-index: 1;
 			position: absolute;
 			left: 32rpx;
@@ -576,7 +630,8 @@
 			display: flex;
 			flex-direction: column;
 			align-items: center;
-			.txtx1{
+
+			.txtx1 {
 				font-size: 30rpx;
 				font-family: PingFangSC, PingFangSC-Regular;
 				font-weight: 400;
@@ -585,16 +640,19 @@
 				padding-top: 78rpx;
 				margin-bottom: 52rpx;
 			}
-			.txtx2{
+
+			.txtx2 {
 				display: flex;
 				align-items: center;
-				.xx1{
+
+				.xx1 {
 					font-size: 28rpx;
 					font-family: PingFangSC, PingFangSC-Regular;
 					font-weight: 400;
 					color: #666666;
 				}
-				.xx2{
+
+				.xx2 {
 					font-size: 48rpx;
 					font-family: PingFangSC, PingFangSC-Regular;
 					font-weight: 400;
@@ -603,14 +661,16 @@
 					// text-decoration: underline;
 					border-bottom: 2rpx solid #ececec;
 				}
-				.myicon{
+
+				.myicon {
 					margin-left: 6rpx;
 					width: 34rpx;
 					height: 34rpx;
 				}
 			}
 		}
-		.p1-tit2{
+
+		.p1-tit2 {
 			position: absolute;
 			top: 500rpx;
 			left: 222rpx;
@@ -618,12 +678,14 @@
 			align-items: center;
 			justify-content: center;
 			margin-top: 42rpx;
-			.myicon2{
+
+			.myicon2 {
 				width: 48rpx;
 				height: 48rpx;
 				margin-right: 16rpx;
 			}
-			.p1-txt2{
+
+			.p1-txt2 {
 				font-size: 30rpx;
 				font-family: PingFangSC, PingFangSC-Regular;
 				font-weight: 400;
@@ -631,6 +693,7 @@
 			}
 		}
 	}
+
 	/deep/ .modal {
 		width: 170rpx !important;
 	}

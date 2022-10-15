@@ -5,11 +5,11 @@
 			<u-icon @click='toBack' style='margin-right: 12rpx;' name="arrow-left" color="#000000" size="36"></u-icon>
 			<view @click='toBack' class="n1-txt">统计</view>
 		</view>
-		<view @click="popover = true" class="float-img2">
+		<view @click="clickPop" class="float-img2">
 			<view class="fi2-txt">{{pop_title}}</view>
 			<u-icon style='transform: rotate(90deg);' name="play-right-fill" color="#fffbfb" size="14"></u-icon>
 		</view>
-		<popover class="popov" @select='changePop' :btnList='popoverList' :modalLeftPos='"-20rpx"' :modalTopPos='"-10rpx"'
+		<popover v-if="isShowPop" class="popov" @select='changePop' :btnList='popoverList' :modalLeftPos='"-20rpx"' :modalTopPos='"888rpx"'
 			:modalOpacity='"1"' :active="popover"></popover>
 		<view style="margin-top: calc(176rpx + 32rpx);" class="nav2">
 			<view class="table">
@@ -40,8 +40,9 @@
 					<view class="x3">8</view>
 					<view class="x33"  @click="clickJJ(i)">
 						<view class="tttx">紧急</view>
-						<u-icon style='transform: rotate(90deg);' name="play-right-fill" color="#FF5C50" size="16"></u-icon>
-						<popover v-if="nowIndex == i" class="popov" @select='changePop1' :btnList='popoverList1' :modalLeftPos='"-20rpx"' :modalTopPos='"-10rpx"'
+						<!-- 管理员 -->
+						<u-icon v-if='isGLY' style='transform: rotate(90deg);' name="play-right-fill" color="#FF5C50" size="16"></u-icon>
+						<popover v-if="nowIndex == i" class="popov" @select='changePop1' :btnList='popoverList1' :modalLeftPos='"-20rpx"' :modalTopPos='"32rpx"'
 						:modalOpacity='"1"' :active="popover1"></popover>
 					</view>
 					
@@ -59,6 +60,8 @@
 		},
 		data() {
 			return {
+				isGLY:false,
+				isShowPop:false,
 				nowIndex:-1,
 				list:[],
 				popoverList:['今天','本周','上周','累计'],
@@ -80,18 +83,25 @@
 
 		},
 		methods: {
+			clickPop(){
+				this.isShowPop = true
+				this.popover = true
+			},
 			clickJJ(i){
+				console.log(i)
 				this.nowIndex = i;
 				this.popover1 = true
 			},
 			changePop1(e){
 				console.log(e)
 				this.popover1 = false
+				this.nowIndex = -1;
 			},
 			changePop(e) {
-				console.log(e)
+				// console.log(e)
 				this.pop_title = e
 				this.popover = false
+				this.isShowPop = false
 			},
 			toBack() {
 				uni.navigateBack({
@@ -121,8 +131,9 @@
 		background: #ffffff;
 	}
 	/deep/ .compos{
+		// position: fixed !important;
 		position: fixed !important;
-		bottom: 516rpx;
+		// bottom: 516rpx;
 		right: 20rpx;
 		width: 200rpx;
 		.modal-item {

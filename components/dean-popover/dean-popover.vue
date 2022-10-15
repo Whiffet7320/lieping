@@ -14,7 +14,7 @@
 				}"
 			>
 				<view class="modal-ang" v-if="dotShow && btnList.length > 0" :style="direction !== 'left' ? 'left: 10px': 'right: 10px'"></view>
-				<view class="modal-item" v-for="(item, index) in btnList" :index="index" :key="index" @tap="callRes(item)">
+				<view class="modal-item" v-for="(item, index) in btnList" :index="index" :key="index" @tap.stop="callRes(item)">
 					{{item}}
 				</view>
 			</view>
@@ -51,6 +51,7 @@ export default {
 		},
 		active() {
 			this.show = this.active
+			// console.log(this.show)
 		}
 	},
 	props: {

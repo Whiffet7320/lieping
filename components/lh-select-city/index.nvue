@@ -3,9 +3,9 @@
 		<!-- 内容 -->
 		<scroll-view class="scroll" :scroll-into-view="scrollIntoId" :scroll-y="true" :scroll-with-animation="true"
 			:show-scrollbar="false" :style="'height:'+windowHeight">
-			<view id="current" class="nav1-1">
-				<u-icon style='margin-right: 6rpx;' name="search" color="#BCBCBC" size="28"></u-icon>
-				<u-input :clearable='false' style='width: 570rpx !important;' v-model="keyword" type="text" placeholder='请输入城市名、拼音或首字母查询' />
+			<view id="current" class="nav1-1" @click="toSearchPage">
+				<u-icon @click="toSearchPage" style='margin-right: 6rpx;' name="search" color="#BCBCBC" size="28"></u-icon>
+				<u-input @click="toSearchPage" :clearable='false' style='width: 570rpx !important;' v-model="keyword" type="text" placeholder='请输入城市名、拼音或首字母查询' />
 			</view>
 			<!-- 当前城市 -->
 			<!-- <view style="height:200rpx">
@@ -114,6 +114,11 @@
 		created() {},
 		mounted() {},
 		methods: {
+			toSearchPage(){
+				uni.navigateTo({
+					url:'/pages/gangwei/searchPage' 
+				})
+			},
 			// 点击城市
 			onSelect(city) {
 				this.city = city;

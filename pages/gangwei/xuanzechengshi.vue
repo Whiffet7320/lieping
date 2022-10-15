@@ -8,8 +8,8 @@
 			<view @click="isGuonei = false" :class="{'n1-txt2':true,'active':!isGuonei}">海外</view>
 		</view>
 		<view style="margin-top: calc(176rpx + 32rpx);" class="nav2">
-			<!-- <lhSelectCity :value="value" :windowHeight="windowHeight" :hotCitys="hotCitys" @on-select="City"></lhSelectCity> -->
-			<lhSelectCountry :value="value" :windowHeight="windowHeight" :hotCitys="hotCitys" @on-select="City"></lhSelectCountry>
+			<lhSelectCity v-if="isGuonei" :value="value" :windowHeight="windowHeight" :hotCitys="hotCitys" @on-select="City"></lhSelectCity>
+			<lhSelectCountry v-else :value="value" :windowHeight="windowHeight" :hotCitys="hotCitys" @on-select="City"></lhSelectCountry>
 		</view>
 	</view>
 </template>
@@ -37,7 +37,8 @@
 					'厦门'
 				],
 				value: '杭州',
-				windowHeight: ""
+				windowHeight: "",
+				city:'',
 			}
 		},
 		onShow() {
@@ -50,9 +51,14 @@
 		methods: {
 			// 选中事件
 			City(city) {
-				console.log(city)
+				this.city = city
+				this.toBack()
 			},
 			toBack() {
+				let pages = getCurrentPages();  //获取所有页面栈实例列表
+				let nowPage = pages[ pages.length - 1];  //当前页页面实例
+				let prevPage = pages[ pages.length - 2 ];  //上一页页面实例
+				prevPage.$vm.cityVal = this.city;   //修改上一页data里面的searchVal参数值为1211
 				uni.navigateBack({
 					delta: 1
 				})

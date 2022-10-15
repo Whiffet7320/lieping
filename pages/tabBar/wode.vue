@@ -6,7 +6,7 @@
 				<image class="n2-l-img" src="/static/Group.png" mode=""></image>
 				<view class="n2-l-r">
 					<view class="n2-l-r-txt1">奇哒巴哒</view>
-					<view class="n2-l-r-txt2">个人身份：<text class="blue">猎头</text><image class="myIcon" src="/static/newImage/tabBar/qiehuan.png" mode=""></image></view>
+					<view class="n2-l-r-txt2">个人身份：<text @click="toxuanzeshenfen" class="blue">猎头</text><image class="myIcon" @click="toxuanzeshenfen" src="/static/newImage/tabBar/qiehuan.png" mode=""></image></view>
 					
 				</view>
 			</view>
@@ -31,7 +31,7 @@
 			</view>
 		</view>
 		<u-tabbar active-color="#121212" icon-size='60' height='120' mid-button-size="150" v-model="current"
-			:list="tabbarlist" :mid-button="true"></u-tabbar>
+			:list="tabbarlist" @change='changeTabbar' :mid-button="true"></u-tabbar>
 	</view>
 </template>
 
@@ -79,6 +79,18 @@
 			}
 		},
 		methods:{
+			toxuanzeshenfen(){
+				uni.navigateTo({
+					url:'/pages/wode/xuanzeshenfen'
+				})
+			},
+			changeTabbar(i){
+				if(i == 2){
+					uni.navigateTo({
+						url:'/pages/gangwei/chuanjiangangwei'
+					})
+				}
+			},
 			toXiangqin(){
 				uni.navigateTo({
 					url:'/pages/wode/gangweixiangqin'

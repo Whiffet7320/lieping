@@ -9,8 +9,8 @@
 			<view class="n2-tit1">行业背景</view>
 			<view class="n2-box">
 				<view class="n2b-tit1">行业分类<text class="red">*不限</text></view>
-				<view class="n2b-tit2">
-					<view class="l-txt1">大数据行业应用，大数据风控，大数dsadas据广告大数据广告</view>
+				<view class="n2b-tit2" @click="toHangye">
+					<view class="l-txt1">{{hangyeValue}}</view>
 					<u-icon name="play-right-fill" color="#000000" size="20"></u-icon>
 				</view>
 				<view class="heng"></view>
@@ -61,14 +61,16 @@
 				<view class="n2b-tit3">
 					<view class="lt2-txt">任意</view>
 					<view class="shu"></view>
-					<u-input :clearable='false' placeholder='如财务，质量，销售…，多个关键词用逗号隔开' v-model="value" type="text" />
+					<u-input style='width: 552rpx;' :clearable='false' placeholder='如财务，质量，销售…，多个关键词用逗号隔开'
+						v-model="value" type="text" />
 				</view>
 				<view class="heng"></view>
 				<view style="margin-top: 38rpx;" class="n2b-tit1">岗位职级<text class="red">*基础岗位，如专员、主管不要填</text></view>
 				<view class="n2b-tit3">
 					<view class="lt2-txt">任意</view>
 					<view class="shu"></view>
-					<u-input :clearable='false' placeholder='如经理，部长，总监…，多个关键词用逗号隔开' v-model="value" type="text" />
+					<u-input style='width: 552rpx;' :clearable='false' placeholder='如经理，部长，总监…，多个关键词用逗号隔开'
+						v-model="value" type="text" />
 				</view>
 				<view class="heng"></view>
 				<!--  -->
@@ -80,6 +82,7 @@
 					</view>
 					<view class="shu"></view>
 					<u-input :clearable='false' placeholder='请输入职责关键词，多个关键词用逗号隔开' v-model="value" type="text" />
+					<view @click="clickZk(1)" class="zk">展开</view>
 				</view>
 				<view class="heng"></view>
 				<popover @select='changePop1' :btnList='popoverList1' :modalLeftPos='"-20rpx"' :modalTopPos='"-10rpx"'
@@ -93,6 +96,7 @@
 					</view>
 					<view class="shu"></view>
 					<u-input :clearable='false' placeholder='请输入职责关键词，多个关键词用逗号隔开' v-model="value" type="text" />
+					<view @click="clickZk(2)" class="zk">展开</view>
 				</view>
 				<view class="heng"></view>
 				<popover @select='changePop2' :btnList='popoverList1' :modalLeftPos='"-20rpx"' :modalTopPos='"-10rpx"'
@@ -106,6 +110,7 @@
 					</view>
 					<view class="shu"></view>
 					<u-input :clearable='false' placeholder='请输入职责关键词，多个关键词用逗号隔开' v-model="value" type="text" />
+					<view @click="clickZk(3)" class="zk">展开</view>
 				</view>
 				<view class="heng"></view>
 				<popover @select='changePop3' :btnList='popoverList1' :modalLeftPos='"-20rpx"' :modalTopPos='"-10rpx"'
@@ -233,7 +238,13 @@
 		<view class="footer">
 			<view class="btn">完成</view>
 		</view>
-
+		<u-popup mode='bottom' closeable border-radius='32' height='552' v-model="pop1Show">
+			<view class="pop1">
+				<view class="txx">
+					接待客户，打印文件，整理会议资，接待客户，打印文件，整理会议资，接待客户，打印文件，整理会议资，接待客户，打印文件，整理会议资，接待客户，打印文件，整理会议资，接待客户，打印文件，整理会议资，接待客户，打印文件，整理会议资，接待客户，打印文件，整理会议资，接待客户，打印文件，整理会议资，接待客户，打印文件，整理会议资，接待客户，打印文件，整理会议资，接待客户，打印文件，整理会议资，
+				</view>
+			</view>
+		</u-popup>
 	</view>
 </template>
 
@@ -245,7 +256,8 @@
 		},
 		data() {
 			return {
-				gangweiValue:'',
+				pop1Show:false,
+				gangweiValue: '',
 				gangweiList: [],
 				popoverList1: ['任意', '全部'],
 				isYes: true,
@@ -324,6 +336,8 @@
 					}
 				],
 				sele2_1_val: '',
+				hangyeValue:"",
+				hangyeList:[],
 			}
 		},
 		onShow() {
@@ -344,26 +358,43 @@
 
 		},
 		methods: {
-			getGangweiData(e){
-				// console.log(e)
+			clickZk(i) {
+				this.pop1Show = true;
+			},
+			getHangyeData(e) {
+				console.log(e)
+				var arr = []
+				this.hangyeList = e;
+				this.hangyeList.forEach(ele => {
+					arr.push(ele.name)
+				})
+				this.hangyeValue = arr.toString()
+			},
+			getGangweiData(e) {
+				console.log(e)
 				var arr = []
 				this.gangweiList = e;
-				this.gangweiList.forEach(ele=>{
+				this.gangweiList.forEach(ele => {
 					arr.push(ele.name)
 				})
 				this.gangweiValue = arr.toString()
 			},
-			toBack(){
+			toBack() {
 				uni.navigateBack({
-					delta:1
+					delta: 1
 				})
 				// uni.switchTab({
 				// 	url:'/pages/tabBar/daohang'
 				// })
 			},
-			toGangwei(){
+			toHangye() {
 				uni.navigateTo({
-					url:'/pages/index/xuanzegangwei'
+					url: '/pages/index/xuanzefenlei'
+				})
+			},
+			toGangwei() {
+				uni.navigateTo({
+					url: '/pages/index/xuanzegangwei'
 				})
 			},
 			toWaiyu() {
@@ -585,14 +616,22 @@
 
 			/deep/ .u-input__input {
 				width: 552rpx;
+				// width: 478rpx;
 				font-size: 24rpx;
+			}
+
+			.zk {
+				font-size: 24rpx;
+				font-family: PingFangSC, PingFangSC-Regular;
+				color: #1362fd;
+				margin-left: 12rpx;
 			}
 		}
 	}
 
 	.nav2.nav3.nav4 {
 		/deep/ .u-input__input {
-			width: 522rpx;
+			width: 466rpx;
 			font-size: 24rpx;
 		}
 
@@ -696,12 +735,26 @@
 			line-height: 96rpx;
 		}
 	}
-	/deep/ .u-select__header__title{
+
+	/deep/ .u-select__header__title {
 		font-size: 32rpx;
 	}
-	/deep/ .u-select__body__picker-view__item{
-		.u-line-1{
+
+	/deep/ .u-select__body__picker-view__item {
+		.u-line-1 {
 			font-size: 36rpx;
+		}
+	}
+	.pop1{
+		.txx{
+			transform: translateY(110rpx);
+			margin: 0 auto 0 auto;
+			width: 632rpx;
+			font-size: 28rpx;
+			font-family: PingFangSC, PingFangSC-Regular;
+			font-weight: 400;
+			color: #121212;
+			line-height: 40rpx;
 		}
 	}
 </style>
