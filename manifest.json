@@ -52,7 +52,7 @@
     "quickapp" : {},
     /* 小程序特有相关 */
     "mp-weixin" : {
-        "appid" : "wx24912f458fea2460",
+        "appid" : "wx263bf4aa608f7fa3",
         "setting" : {
             "urlCheck" : true,
             "es6" : true,
@@ -64,6 +64,9 @@
             "scope.userLocation" : {
                 "desc" : "你的位置信息将用于小程序位置接口的效果展示"
             }
+        },
+        "optimization" : {
+            "subPackages" : true
         }
     },
     "mp-alipay" : {
@@ -77,5 +80,16 @@
     },
     "uniStatistics" : {
         "enable" : false
+    },
+    "h5" : {
+        "template" : "index.html",
+        "router" : {
+            "base" : "./"
+        },
+        "optimization" : {
+            "treeShaking" : {
+                "enable" : false
+            }
+        }
     }
 }

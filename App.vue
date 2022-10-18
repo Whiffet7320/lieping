@@ -4,6 +4,16 @@
 			spid: 0,
 			code: 0
 		},
+		mounted() {
+			// const query = uni.createSelectorQuery().in(this);
+			// query.select('script').boundingClientRect(data => {
+			//   console.log("得到布局位置信息" + JSON.stringify(data));
+			//   console.log("节点离页面顶部的距离为" + data.top);
+			// }).exec();
+			// oScript.type = "text/javascript";
+			// oScript.src = "https://cdn.bootcdn.net/ajax/libs/jquery/3.6.1/jquery.js";
+			// document.body.appendChild(oScript);
+		},
 		// onLaunch(option) {
 		// 	if (option.query.hasOwnProperty('scene')) {
 		// 		switch (option.scene) {
@@ -60,10 +70,12 @@
 
 <style lang="scss">
 	@import "uview-ui/index.scss";
-	page{
+
+	page {
 		font-family: PingFang SC;
 	}
-	/deep/ .u-line-1{
+
+	/deep/ .u-line-1 {
 		font-size: 24rpx;
 	}
 </style>

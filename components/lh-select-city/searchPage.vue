@@ -3,8 +3,8 @@
 		<view class="nav1">
 			<view id="current" class="nav1-1">
 				<u-icon style='margin-right: 6rpx;' name="search" color="#BCBCBC" size="28"></u-icon>
-				<u-input @input='changeInp' clearable style='width: 460rpx !important;' v-model="keyword" type="text"
-					placeholder='请输入城市名、拼音或首字母查询' />
+				<u-input :focus='Focus1' ref='inp' @input='changeInp' clearable style='width: 460rpx !important;'
+					v-model="keyword" type="text" placeholder='请输入城市名、拼音或首字母查询' />
 			</view>
 			<view @click="toBack"
 				style="margin-left: 32rpx;font-size: 28rpx;font-family: PingFangSC, PingFangSC-Regular;font-weight: 400;color: #000000;">
@@ -21,7 +21,10 @@
 </template>
 
 <script>
-	import pinyin from 'pinyin'
+	// import pinyin from 'pinyin'
+	import {
+		pinyin
+	} from './pinyin.js'
 	import cityData from './cityData.js'
 	import countryData from './countryList.js'
 	import countryDataPing from './country-code.js'
@@ -33,6 +36,7 @@
 		},
 		data() {
 			return {
+				Focus1:true,
 				keyword: '',
 				cityData,
 				arr: [],
@@ -43,8 +47,19 @@
 				guowaiArr: [],
 			}
 		},
-		created() {
-			// 国内
+		mounted() {
+			this.Focus1= false
+			this.$nextTick(()=> {
+				this.Focus1 = true;
+			});
+		},
+		async created() {
+			// const res = await uniCloud.callFunction({
+			// 	name:'myFunc',
+			// 	data:{}
+			// })
+			// console.log(res,123)
+			// 国内 
 			this.arr = []
 			this.cityData.forEach(ele => {
 				ele.list.forEach(ele2 => {
@@ -195,6 +210,40 @@
 			console.log(this.guowaiArr)
 		},
 		methods: {
+			chineseToPinYin(l1) {
+				var l2 = l1.length;
+				var I1 = '';
+				var reg = new RegExp('[a-zA-Z0-9]');
+				for (var i = 0; i < l2; i++) {
+					var val = l1.substr(i, 1);
+					var name = this.arraySearch(val, pinyin);
+					if (reg.test(val)) {
+						I1 += val;
+					} else if (name !== false) {
+						I1 += name;
+					}
+				}
+				I1 = I1.replace(/ /g, '-');
+				while (I1.indexOf('--') > 0) {
+					I1 = I1.replace('--', '-');
+				}
+				return I1;
+			},
+			arraySearch(l1, l2) {
+				for (var name in pinyin) {
+					if (pinyin[name].indexOf(l1) !== -1) {
+						return this.ucfirst(name);
+					}
+				}
+				return false;
+			},
+			ucfirst(l1) {
+				if (l1.length > 0) {
+					var first = l1.substr(0, 1).toUpperCase();
+					var spare = l1.substr(1, l1.length);
+					return first + spare;
+				}
+			},
 			// 点击城市
 			onSelect(city) {
 				this.city = city;
@@ -218,29 +267,31 @@
 								//keys获取数组可迭代属性，some方法遍历所有属性进行存在验证
 								return Object.keys(data).some((key) => {
 									//将汉字属性转换成字符串数组
-									let dataPyArr = pinyin(data[key], {
-										style: "normal"
-									});
-									//将字符串数组转成字符串
-									let dataPy = dataPyArr.join('')
+									let dataPy = this.chineseToPinYin(data[key]).toLowerCase()
+									// let dataPyArr = pinyin(data[key], {
+									// 	style: "normal"
+									// });
+									// //将字符串数组转成字符串
+									// let dataPy = dataPyArr.join('')
 									//搜索内容和每个value值 匹配
 									return reg.test(dataPy)
 								});
 							}
 						});
-					}else{
+					} else {
 						this.filterArr = this.guowaiArr.filter((data) => {
 							if (data.indexOf(input) != -1) {
 								return data.indexOf(input) != -1
 							} else {
 								//keys获取数组可迭代属性，some方法遍历所有属性进行存在验证
 								return Object.keys(data).some((key) => {
-									//将汉字属性转换成字符串数组
-									let dataPyArr = pinyin(data[key], {
-										style: "normal"
-									});
-									//将字符串数组转成字符串
-									let dataPy = dataPyArr.join('')
+									let dataPy = this.chineseToPinYin(data[key]).toLowerCase()
+									// //将汉字属性转换成字符串数组
+									// let dataPyArr = pinyin(data[key], {
+									// 	style: "normal"
+									// });
+									// //将字符串数组转成字符串
+									// let dataPy = dataPyArr.join('')
 									//搜索内容和每个value值 匹配
 									return reg.test(dataPy)
 								});
