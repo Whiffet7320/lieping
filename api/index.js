@@ -1,6 +1,7 @@
 import axios from 'axios';
 import Vue from 'vue';
 import urls from './url.js';
+import qs from 'qs'
 const vue = new Vue()
 let myPost = axios.create({
 	baseURL: urls.baseUrl,
@@ -108,15 +109,17 @@ myDelete.interceptors.request.use(config => {
 	return Promise.reject();
 })
 myPost.interceptors.request.use(config => {
+	config.headers = {
+		'token': '',
+		'Content-Type': 'application/x-www-form-urlencoded'
+	}
 	if (uni.getStorageSync('token')) {
-		config.headers = {
-			'Accept': 'application/json',
-			'Authorization': `Bearer ${uni.getStorageSync('token')}`
-			// 'token':  uni.getStorageSync('token'),
-			// 'Access-Control-Allow-Origin': '*',
-			// "access-control-allow-credentials": "true"
-		}
-		// config.headers.token = uni.getStorageSync('token');
+		// config.headers = {
+		// 	'token':  uni.getStorageSync('token'),
+		// 	// 'Access-Control-Allow-Origin': '*',
+		// 	// "access-control-allow-credentials": "true"
+		// }
+		config.headers.token = uni.getStorageSync('token');
 	}
 	console.log(config)
 	return config;
@@ -143,7 +146,7 @@ myDelete.interceptors.response.use(response => {
 	if (response.status === 200) {
 		if (response.data.code == 401) {
 			uni.navigateTo({
-				url: '/pages/login/login'
+				url: '/pages/wode/xuanzeshenfen'
 			})
 		} else {
 			return response.data
@@ -169,8 +172,65 @@ myDelete.interceptors.response.use(response => {
 			vue.$message.error(error.response.data.info);
 		}
 	} else if (error.response.status === 401) {
-		sessionStorage.setItem("isLogin", false);
-		console.log(sessionStorage.getItem("isLogin"));
+		// sessionStorage.setItem("isLogin", false);
+		// console.log(sessionStorage.getItem("isLogin"));
+		uni.login({
+			provider: 'weixin',
+			success: async function(loginRes) {
+				try {
+					var code = loginRes.code;
+					const res = await vue.$api.wx_login({
+						logincode: code,
+						nickname: '微信用户',
+						userface: 'https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132',
+					})
+					console.log(res, '授权')
+					if (res.result == 1) {
+						uni.setStorage({
+							key: 'token',
+							data: res.token,
+							success: async () => {
+								if (res
+									.user_category ==
+									0) {
+									uni.navigateTo({
+										url: '/pages/wode/xuanzeshenfen'
+									})
+								} else if (res.user_category == 1) {
+									const res33 = await vue.$api.user_info()
+									console.log(res33, '3333')
+									if (res33.is_joincompany == 1 || res33
+										.is_licensestatus == 2) {
+										uni.switchTab({
+											url: '/pages/tabBar/index'
+										})
+									} else {
+										uni.navigateTo({
+											url: '/pages/tabBar/wode'
+										})
+									}
+								} else if (res.user_category == 2) {
+									uni.navigateTo({
+										url: '/pages/tabBar/qzz_sy'
+									})
+								} else {
+									uni.navigateBack({
+										delta: 1
+									})
+								}
+							}
+						})
+					} else {
+						vue.$refs.uToast.show({
+							title: res.msg,
+							type: 'error',
+						})
+					}
+				} catch (err) {
+					console.log(err, 'err')
+				}
+			}
+		})
 		// router.push({ path: "/" })
 		// router.go(0)
 		return Promise.reject();
@@ -195,7 +255,7 @@ myUploadImg.interceptors.response.use(response => {
 	if (response.status === 200) {
 		if (response.data.code == 401) {
 			uni.navigateTo({
-				url: '/pages/login/login'
+				url: '/pages/wode/xuanzeshenfen'
 			})
 		} else {
 			return response.data
@@ -221,8 +281,65 @@ myUploadImg.interceptors.response.use(response => {
 			vue.$message.error(error.response.data.info);
 		}
 	} else if (error.response.status === 401) {
-		sessionStorage.setItem("isLogin", false);
-		console.log(sessionStorage.getItem("isLogin"));
+		// sessionStorage.setItem("isLogin", false);
+		// console.log(sessionStorage.getItem("isLogin"));
+		uni.login({
+			provider: 'weixin',
+			success: async function(loginRes) {
+				try {
+					var code = loginRes.code;
+					const res = await vue.$api.wx_login({
+						logincode: code,
+						nickname: '微信用户',
+						userface: 'https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132',
+					})
+					console.log(res, '授权')
+					if (res.result == 1) {
+						uni.setStorage({
+							key: 'token',
+							data: res.token,
+							success: async () => {
+								if (res
+									.user_category ==
+									0) {
+									uni.navigateTo({
+										url: '/pages/wode/xuanzeshenfen'
+									})
+								} else if (res.user_category == 1) {
+									const res33 = await vue.$api.user_info()
+									console.log(res33, '3333')
+									if (res33.is_joincompany == 1 || res33
+										.is_licensestatus == 2) {
+										uni.switchTab({
+											url: '/pages/tabBar/index'
+										})
+									} else {
+										uni.navigateTo({
+											url: '/pages/tabBar/wode'
+										})
+									}
+								} else if (res.user_category == 2) {
+									uni.navigateTo({
+										url: '/pages/tabBar/qzz_sy'
+									})
+								} else {
+									uni.navigateBack({
+										delta: 1
+									})
+								}
+							}
+						})
+					} else {
+						vue.$refs.uToast.show({
+							title: res.msg,
+							type: 'error',
+						})
+					}
+				} catch (err) {
+					console.log(err, 'err')
+				}
+			}
+		})
 		// router.push({ path: "/" })
 		// router.go(0)
 		return Promise.reject();
@@ -243,14 +360,18 @@ myUploadImg.interceptors.response.use(response => {
 	}
 })
 myGet.interceptors.request.use(config => {
+	config.headers = {
+		'token': '',
+		'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+	}
 	if (uni.getStorageSync('token')) {
-		config.headers = {
-			'Accept': 'application/json',
-			// 'token': sessionStorage.token,
-			'Authorization': `Bearer ${uni.getStorageSync('token')}`,
-			'Access-Control-Allow-Origin': '*',
-			"access-control-allow-credentials": "true"
-		}
+		// config.headers = {
+		// 	'Accept': 'application/json',
+		// 	// 'token': sessionStorage.token,
+		// 	'Authorization': `Bearer ${uni.getStorageSync('token')}`,
+		// 	'Access-Control-Allow-Origin': '*',
+		// 	"access-control-allow-credentials": "true"
+		// }
 		config.headers.token = uni.getStorageSync('token');
 	}
 	return config;
@@ -263,7 +384,7 @@ myPut.interceptors.response.use(response => {
 	if (response.status === 200) {
 		if (response.data.code == 401) {
 			uni.navigateTo({
-				url: '/pages/login/login'
+				url: '/pages/wode/xuanzeshenfen'
 			})
 		} else {
 			return response.data
@@ -289,8 +410,65 @@ myPut.interceptors.response.use(response => {
 			vue.$message.error(error.response.data.info);
 		}
 	} else if (error.response.status === 401) {
-		sessionStorage.setItem("isLogin", false);
-		console.log(sessionStorage.getItem("isLogin"));
+		// sessionStorage.setItem("isLogin", false);
+		// console.log(sessionStorage.getItem("isLogin"));
+		uni.login({
+			provider: 'weixin',
+			success: async function(loginRes) {
+				try {		
+					var code = loginRes.code;
+					const res = await vue.$api.wx_login({
+						logincode: code,
+						nickname: '微信用户',
+						userface: 'https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132',
+					})
+					console.log(res, '授权')
+					if (res.result == 1) {
+						uni.setStorage({
+							key: 'token',
+							data: res.token,
+							success: async () => {
+								if (res
+									.user_category ==
+									0) {
+									uni.navigateTo({
+										url: '/pages/wode/xuanzeshenfen'
+									})
+								} else if (res.user_category == 1) {
+									const res33 = await vue.$api.user_info()
+									console.log(res33, '3333')
+									if (res33.is_joincompany == 1 || res33
+										.is_licensestatus == 2) {
+										uni.switchTab({
+											url: '/pages/tabBar/index'
+										})
+									} else {
+										uni.navigateTo({
+											url: '/pages/tabBar/wode'
+										})
+									}
+								} else if (res.user_category == 2) {
+									uni.navigateTo({
+										url: '/pages/tabBar/qzz_sy'
+									})
+								} else {
+									uni.navigateBack({
+										delta: 1
+									})
+								}
+							}
+						})
+					} else {
+						vue.$refs.uToast.show({
+							title: res.msg,
+							type: 'error',
+						})
+					}
+				} catch (err) {
+					console.log(err, 'err')
+				}
+			}
+		})
 		// router.push({ path: "/" })
 		// router.go(0)
 		return Promise.reject();
@@ -313,9 +491,9 @@ myPut.interceptors.response.use(response => {
 myPost.interceptors.response.use(response => {
 	// console.log(response)
 	if (response.status === 200) {
-		if (response.data.code == 410001) {
+		if (response.data.code == 401) {
 			uni.navigateTo({
-				url: '/pages/login/login'
+				url: '/pages/wode/xuanzeshenfen'
 			})
 		} else {
 			return response.data
@@ -334,15 +512,72 @@ myPost.interceptors.response.use(response => {
 	}
 }, error => {
 	//错误跳转
-	console.log(error)
+	console.log(error.response.status)
 	if (error.response.status === 500) {
 		console.log(vue)
 		if (error.response.data.info != '参数错误') {
 			vue.$message.error(error.response.data.info);
 		}
-	} else if (error.response.status === 410001) {
-		sessionStorage.setItem("isLogin", false);
-		console.log(sessionStorage.getItem("isLogin"));
+	} else if (error.response.status === 401) {
+		// sessionStorage.setItem("isLogin", false);
+		// console.log(sessionStorage.getItem("isLogin"));
+		uni.login({
+			provider: 'weixin',
+			success: async function(loginRes) {
+				try {
+					var code = loginRes.code;
+					const res = await vue.$api.wx_login({
+						logincode: code,
+						nickname: '微信用户',
+						userface: 'https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132',
+					})
+					console.log(res, '授权')
+					if (res.result == 1) {
+						uni.setStorage({
+							key: 'token',
+							data: res.token,
+							success: async () => {
+								if (res
+									.user_category ==
+									0) {
+									uni.navigateTo({
+										url: '/pages/wode/xuanzeshenfen'
+									})
+								} else if (res.user_category == 1) {
+									const res33 = await vue.$api.user_info()
+									console.log(res33, '3333')
+									if (res33.is_joincompany == 1 || res33
+										.is_licensestatus == 2) {
+										uni.switchTab({
+											url: '/pages/tabBar/index'
+										})
+									} else {
+										uni.navigateTo({
+											url: '/pages/tabBar/wode'
+										})
+									}
+								} else if (res.user_category == 2) {
+									uni.navigateTo({
+										url: '/pages/tabBar/qzz_sy'
+									})
+								} else {
+									uni.navigateBack({
+										delta: 1
+									})
+								}
+							}
+						})
+					} else {
+						vue.$refs.uToast.show({
+							title: res.msg,
+							type: 'error',
+						})
+					}
+				} catch (err) {
+					console.log(err, 'err')
+				}
+			}
+		})
 		// router.push({ path: "/" })
 		// router.go(0)
 		return Promise.reject();
@@ -364,9 +599,9 @@ myPost.interceptors.response.use(response => {
 })
 myGet.interceptors.response.use(response => {
 	if (response.status === 200) {
-		if (response.data.code == 410001) {
+		if (response.data.code == 401) {
 			uni.navigateTo({
-				url: '/pages/login/login'
+				url: '/pages/wode/xuanzeshenfen'
 			})
 		} else {
 			return response.data
@@ -385,14 +620,72 @@ myGet.interceptors.response.use(response => {
 	}
 }, error => {
 	//错误跳转
-	console.log(error);
+	console.log(error.response.status, 123456);
 	if (error.response.status === 500) {
 		if (error.response.data.info != '参数错误') {
 			vue.$message.error(error.response.data.info);
 		}
-	} else if (error.response.status === 410001) {
-		sessionStorage.setItem("isLogin", false);
-		console.log(sessionStorage.getItem("isLogin"));
+	} else if (error.response.status === 401) {
+		// sessionStorage.setItem("isLogin", false);
+		// console.log(sessionStorage.getItem("isLogin"));
+		uni.login({
+			provider: 'weixin',
+			success: async function(loginRes) {
+				try {
+					var code = loginRes.code;
+					const res = await vue.$api.wx_login({
+						logincode: code,
+						nickname: '微信用户',
+						userface: 'https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132',
+					})
+					console.log(res, '授权')
+					if (res.result == 1) {
+						uni.setStorage({
+							key: 'token',
+							data: res.token,
+							success: async () => {
+								if (res
+									.user_category ==
+									0) {
+									uni.navigateTo({
+										url: '/pages/wode/xuanzeshenfen'
+									})
+								} else if (res.user_category == 1) {
+									const res33 = await vue.$api.user_info()
+									console.log(res33, '3333')
+									if (res33.is_joincompany == 1 || res33
+										.is_licensestatus == 2) {
+										uni.switchTab({
+											url: '/pages/tabBar/index'
+										})
+									} else {
+										uni.navigateTo({
+											url: '/pages/tabBar/wode'
+										})
+									}
+								} else if (res.user_category == 2) {
+									uni.navigateTo({
+										url: '/pages/tabBar/qzz_sy'
+									})
+								} else {
+									uni.navigateBack({
+										delta: 1
+									})
+								}
+							}
+						})
+					} else {
+						vue.$refs.uToast.show({
+							title: res.msg,
+							type: 'error',
+						})
+					}
+				} catch (err) {
+					console.log(err, 'err')
+				}
+			}
+		})
+		// });
 		// router.push({ path: "/" })
 		// router.go(0)
 		return Promise.reject();
@@ -468,7 +761,7 @@ dzpMyPut.interceptors.response.use(response => {
 	if (response.status === 200) {
 		if (response.data.code == 401) {
 			uni.navigateTo({
-				url: '/pages/login/login'
+				url: '/pages/wode/xuanzeshenfen'
 			})
 		} else {
 			return response.data
@@ -494,8 +787,66 @@ dzpMyPut.interceptors.response.use(response => {
 			vue.$message.error(error.response.data.info);
 		}
 	} else if (error.response.status === 401) {
-		sessionStorage.setItem("isLogin", false);
-		console.log(sessionStorage.getItem("isLogin"));
+		// sessionStorage.setItem("isLogin", false);
+		// console.log(sessionStorage.getItem("isLogin"));
+
+		uni.login({
+			provider: 'weixin',
+			success: async function(loginRes) {
+				try {
+					var code = loginRes.code;
+					const res = await vue.$api.wx_login({
+						logincode: code,
+						nickname: '微信用户',
+						userface: 'https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132',
+					})
+					console.log(res, '授权')
+					if (res.result == 1) {
+						uni.setStorage({
+							key: 'token',
+							data: res.token,
+							success: async () => {
+								if (res
+									.user_category ==
+									0) {
+									uni.navigateTo({
+										url: '/pages/wode/xuanzeshenfen'
+									})
+								} else if (res.user_category == 1) {
+									const res33 = await vue.$api.user_info()
+									console.log(res33, '3333')
+									if (res33.is_joincompany == 1 || res33
+										.is_licensestatus == 2) {
+										uni.switchTab({
+											url: '/pages/tabBar/index'
+										})
+									} else {
+										uni.navigateTo({
+											url: '/pages/tabBar/wode'
+										})
+									}
+								} else if (res.user_category == 2) {
+									uni.navigateTo({
+										url: '/pages/tabBar/qzz_sy'
+									})
+								} else {
+									uni.navigateBack({
+										delta: 1
+									})
+								}
+							}
+						})
+					} else {
+						vue.$refs.uToast.show({
+							title: res.msg,
+							type: 'error',
+						})
+					}
+				} catch (err) {
+					console.log(err, 'err')
+				}
+			}
+		})
 		// router.push({ path: "/" })
 		// router.go(0)
 		return Promise.reject();
@@ -520,7 +871,7 @@ dzpMyPost.interceptors.response.use(response => {
 	if (response.status === 200) {
 		if (response.data.code == 401) {
 			uni.navigateTo({
-				url: '/pages/login/login'
+				url: '/pages/wode/xuanzeshenfen'
 			})
 		} else {
 			return response.data
@@ -546,8 +897,65 @@ dzpMyPost.interceptors.response.use(response => {
 			vue.$message.error(error.response.data.info);
 		}
 	} else if (error.response.status === 401) {
-		sessionStorage.setItem("isLogin", false);
-		console.log(sessionStorage.getItem("isLogin"));
+		// sessionStorage.setItem("isLogin", false);
+		// console.log(sessionStorage.getItem("isLogin"));
+		uni.login({
+			provider: 'weixin',
+			success: async function(loginRes) {
+				try {
+					var code = loginRes.code;
+					const res = await vue.$api.wx_login({
+						logincode: code,
+						nickname: '微信用户',
+						userface: 'https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132',
+					})
+					console.log(res, '授权')
+					if (res.result == 1) {
+						uni.setStorage({
+							key: 'token',
+							data: res.token,
+							success: async () => {
+								if (res
+									.user_category ==
+									0) {
+									uni.navigateTo({
+										url: '/pages/wode/xuanzeshenfen'
+									})
+								} else if (res.user_category == 1) {
+									const res33 = await vue.$api.user_info()
+									console.log(res33, '3333')
+									if (res33.is_joincompany == 1 || res33
+										.is_licensestatus == 2) {
+										uni.switchTab({
+											url: '/pages/tabBar/index'
+										})
+									} else {
+										uni.navigateTo({
+											url: '/pages/tabBar/wode'
+										})
+									}
+								} else if (res.user_category == 2) {
+									uni.navigateTo({
+										url: '/pages/tabBar/qzz_sy'
+									})
+								} else {
+									uni.navigateBack({
+										delta: 1
+									})
+								}
+							}
+						})
+					} else {
+						vue.$refs.uToast.show({
+							title: res.msg,
+							type: 'error',
+						})
+					}
+				} catch (err) {
+					console.log(err, 'err')
+				}
+			}
+		})
 		// router.push({ path: "/" })
 		// router.go(0)
 		return Promise.reject();
@@ -571,7 +979,7 @@ dzpMyGet.interceptors.response.use(response => {
 	if (response.status === 200) {
 		if (response.data.code == 401) {
 			uni.navigateTo({
-				url: '/pages/login/login'
+				url: '/pages/wode/xuanzeshenfen'
 			})
 		} else {
 			return response.data
@@ -596,8 +1004,65 @@ dzpMyGet.interceptors.response.use(response => {
 			vue.$message.error(error.response.data.info);
 		}
 	} else if (error.response.status === 401) {
-		sessionStorage.setItem("isLogin", false);
-		console.log(sessionStorage.getItem("isLogin"));
+		// sessionStorage.setItem("isLogin", false);
+		// console.log(sessionStorage.getItem("isLogin"));
+		uni.login({
+			provider: 'weixin',
+			success: async function(loginRes) {
+				try {
+					var code = loginRes.code;
+					const res = await vue.$api.wx_login({
+						logincode: code,
+						nickname: '微信用户',
+						userface: 'https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132',
+					})
+					console.log(res, '授权')
+					if (res.result == 1) {
+						uni.setStorage({
+							key: 'token',
+							data: res.token,
+							success: async () => {
+								if (res
+									.user_category ==
+									0) {
+									uni.navigateTo({
+										url: '/pages/wode/xuanzeshenfen'
+									})
+								} else if (res.user_category == 1) {
+									const res33 = await vue.$api.user_info()
+									console.log(res33, '3333')
+									if (res33.is_joincompany == 1 || res33
+										.is_licensestatus == 2) {
+										uni.switchTab({
+											url: '/pages/tabBar/index'
+										})
+									} else {
+										uni.navigateTo({
+											url: '/pages/tabBar/wode'
+										})
+									}
+								} else if (res.user_category == 2) {
+									uni.navigateTo({
+										url: '/pages/tabBar/qzz_sy'
+									})
+								} else {
+									uni.navigateBack({
+										delta: 1
+									})
+								}
+							}
+						})
+					} else {
+						vue.$refs.uToast.show({
+							title: res.msg,
+							type: 'error',
+						})
+					}
+				} catch (err) {
+					console.log(err, 'err')
+				}
+			}
+		})
 		// router.push({ path: "/" })
 		// router.go(0)
 		return Promise.reject();
@@ -619,247 +1084,347 @@ dzpMyGet.interceptors.response.use(response => {
 })
 
 export default {
-	loginWechat(obj) {
+	wx_login(obj) {
+		obj = qs.stringify(obj)
 		return myPost({
-			url: urls.loginWechat,
-			data: {
-				...obj
-			}
+			url: urls.wx_login,
+			data: obj
 		})
 	},
-	userInfo(obj) {
+	user_upinfo(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.user_upinfo,
+			data: obj
+		})
+	},
+	user_agreement(obj) {
+		obj = qs.stringify(obj)
 		return myGet({
-			url: urls.userInfo,
+			url: urls.user_agreement,
+			data: obj
+		})
+	},
+	user_info(obj) {
+		obj = qs.stringify(obj)
+		return myGet({
+			url: urls.user_info,
+			data: obj
+		})
+	},
+	join_enterprise(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.join_enterprise,
+			data: obj
+		})
+	},
+	user_edituserinfo(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.user_edituserinfo,
+			data: obj
+		})
+	},
+	position_checkview(obj) {
+		obj = qs.stringify(obj)
+		return myGet({
+			url: urls.position_checkview,
+			data: obj
+		})
+	},
+	authentication_enterprise(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.authentication_enterprise,
+			data: obj
+		})
+	},
+	user_team(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.user_team,
+			data: obj
+		})
+	},
+	team_operation(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.team_operation,
+			data: obj
+		})
+	},
+	uploadToken() {
+		return myGet({
+			url: urls.uploadToken,
+		})
+	},
+	authentication_enterpriseview(obj) {
+		obj = qs.stringify(obj)
+		return myGet({
+			url: urls.authentication_enterpriseview,
+			data: obj
+		})
+	},
+	delTeam_operation(obj) {
+		// obj = qs.stringify(obj)
+		return myGet({
+			url: urls.team_operation,
 			params: {
 				...obj
 			}
 		})
 	},
-	updateUserInfo(obj) {
+	user_notify(obj) {
+		obj = qs.stringify(obj)
 		return myPost({
-			url: urls.updateUserInfo,
-			data: {
-				...obj
-			}
+			url: urls.user_notify,
+			data: obj
 		})
 	},
-	userEdit(obj) {
+	user_notifyread(obj) {
+		obj = qs.stringify(obj)
 		return myPost({
-			url: urls.user_update,
-			data: {
-				...obj
-			}
+			url: urls.user_notifyread,
+			data: obj
 		})
 	},
-	product() {
+	user_notifydel(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.user_notifydel,
+			data: obj
+		})
+	},
+	problem_list(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.problem_list,
+			data: obj
+		})
+	},
+	sendsms(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.sendsms,
+			data: obj
+		})
+	},
+	create_position(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.create_position,
+			data: obj
+		})
+	},
+	position_list(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.position_list,
+			data: obj
+		})
+	},
+	position_making(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.position_making,
+			data: obj
+		})
+	},
+	industryscategory(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.industryscategory,
+			data: obj
+		})
+	},
+	jobpost_candidateview(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.jobpost_candidateview,
+			data: obj
+		})
+	},
+	set_postnavigation(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.set_postnavigation,
+			data: obj
+		})
+	},
+	jobcategory(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.jobcategory,
+			data: obj
+		})
+	},
+	foreignlanguage(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.foreignlanguage,
+			data: obj
+		})
+	},
+	position_userdel(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.position_userdel,
+			data: obj
+		})
+	},
+	postnavigation_view(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.postnavigation_view,
+			data: obj
+		})
+	},
+	position_useroperation(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.position_useroperation,
+			data: obj
+		})
+	},
+	compost_jobpost(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.compost_jobpost,
+			data: obj
+		})
+	},
+	headhunt_logo(obj) {
+		obj = qs.stringify(obj)
 		return myGet({
-			url: urls.product,
+			url: urls.headhunt_logo,
+			data: obj
 		})
 	},
-	login(obj) {
+	compost_progresslist(obj) {
+		obj = qs.stringify(obj)
 		return myPost({
-			url: urls.login,
-			data: {
-				...obj
-			}
+			url: urls.compost_progresslist,
+			data: obj
 		})
 	},
-	saveAddress(obj) {
+	positionstatistics_list(obj) {
+		obj = qs.stringify(obj)
 		return myPost({
-			url: urls.saveAddress,data: {
-				...obj
-			}
+			url: urls.positionstatistics_list,
+			data: obj
 		})
 	},
-	send_sms(obj) {
+	positionstatistics_statusset(obj) {
+		obj = qs.stringify(obj)
 		return myPost({
-			url: urls.send_sms,
-			data: {
-				...obj
-			}
+			url: urls.positionstatistics_statusset,
+			data: obj
 		})
 	},
-	addressList() {
+	jobpost_view(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.jobpost_view,
+			data: obj
+		})
+	},
+	position_view(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.position_view,
+			data: obj
+		})
+	},
+	teamstatistics_list(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.teamstatistics_list,
+			data: obj
+		})
+	},
+	jobpost_list(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.jobpost_list,
+			data: obj
+		})
+	},
+	compost_candidate(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.compost_candidate,
+			data: obj
+		})
+	},
+	compost_candidateview(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.compost_candidateview,
+			data: obj
+		})
+	},
+	jobpost_candidate(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.jobpost_candidate,
+			data: obj
+		})
+	},
+	share_jobpost(obj) {
+		obj = qs.stringify(obj)
+		return myPost({
+			url: urls.share_jobpost,
+			data: obj
+		})
+	},
+	tokentouserid(obj) {
+		obj = qs.stringify(obj)
 		return myGet({
-			url: urls.addressList,
+			url: urls.tokentouserid,
+			data: obj
 		})
 	},
-	delAddress(id) {
+	jobpost_candidateanalysis(obj) {
+		obj = qs.stringify(obj)
 		return myPost({
-			url: urls.delAddress,
-			data: {
-				id
-			}
+			url: urls.jobpost_candidateanalysis,
+			data: obj
 		})
 	},
-	orderPay(obj) {
+	acceptjobs_operation(obj) {
+		obj = qs.stringify(obj)
 		return myPost({
-			url: urls.orderPay,
-			data: {
-				...obj
-			}
+			url: urls.acceptjobs_operation,
+			data: obj
 		})
 	},
-	register(obj) {
+	acceptjobs_view(obj) {
+		obj = qs.stringify(obj)
 		return myPost({
-			url: urls.register,
-			data: {
-				...obj
-			}
+			url: urls.acceptjobs_view,
+			data: obj
 		})
 	},
-	captch_login(obj) {
+	swiper_list(obj) {
+		obj = qs.stringify(obj)
 		return myPost({
-			url: urls.captch_login,
-			data: {
-				...obj
-			}
+			url: urls.swiper_list,
+			data: obj
 		})
 	},
-	yzrealName(obj) {
+	view_qrcode(obj) {
+		obj = qs.stringify(obj)
 		return myPost({
-			url: urls.yzrealName,
-			data: {
-				...obj
-			}
+			url: urls.view_qrcode,
+			data: obj
 		})
 	},
-	forgetpwd(obj) {
+	check_qrcode(obj) {
+		obj = qs.stringify(obj)
 		return myPost({
-			url: urls.forgetpwd,
-			data: {
-				...obj
-			}
-		})
-	},
-	updatepwd(obj) {
-		return myPost({
-			url: urls.updatepwd,
-			data: {
-				...obj
-			}
-		})
-	},
-	recharge(obj) {
-		return myPost({
-			url: urls.recharge,
-			data: {
-				...obj
-			}
-		})
-	},
-	wait_pay(obj) {
-		return myPost({
-			url: urls.wait_pay,
-			data: {
-				...obj
-			}
-		})
-	},
-	exress_detail(obj) {
-		return myGet({
-			url: urls.exress_detail,
-			params:{
-				...obj
-			}
-		})
-	},
-	bindBank(obj) {
-		return myPost({
-			url: urls.bindBank,
-			data: {
-				...obj
-			}
-		})
-	},
-	userBanklist() {
-		return myGet({
-			url: urls.userBanklist,
-		})
-	},
-	delBank(bank_id) {
-		return myPost({
-			url: urls.delBank,
-			data: {
-				bank_id
-			}
-		})
-	},
-	orderList(obj) {
-		return myGet({
-			url: urls.orderList,
-			params: {
-				...obj
-			}
-		})
-	},
-	integral_list(obj) {
-		return myGet({
-			url: urls.integral_list,
-			params: {
-				...obj
-			}
-		})
-	},
-	withdraw_list(obj) {
-		return myGet({
-			url: urls.withdraw_list,
-			params: {
-				...obj
-			}
-		})
-	},
-	walletlist(obj) {
-		return myGet({
-			url: urls.walletlist,
-			params: {
-				...obj
-			}
-		})
-	},
-	confirmOrder(order_id) {
-		return myPost({
-			url: urls.confirmOrder,
-			data: {
-				order_id
-			}
-		})
-	},
-	delOrder(order_id) {
-		return myPost({
-			url: urls.delOrder,
-			data: {
-				order_id
-			}
-		})
-	},
-	notice(obj) {
-		return myGet({
-			url: urls.notice
-		})
-	},
-	set_pay_password(obj) {
-		return myPost({
-			url: urls.set_pay_password,
-			data: {
-				...obj
-			}
-		})
-	},
-	spread(obj) {
-		return myGet({
-			url: urls.spread,
-			params: {
-				...obj
-			}
-		})
-	},
-	withdraw(obj) {
-		return myPost({
-			url: urls.withdraw,
-			data: {
-				...obj
-			}
+			url: urls.check_qrcode,
+			data: obj
 		})
 	},
 	upload_pic(file, type) {
@@ -879,7 +1444,7 @@ export default {
 				success: (res) => {
 					if (JSON.parse(res.data).code == 401) {
 						uni.navigateTo({
-							url: '/pages/login/login'
+							url: '/pages/wode/xuanzeshenfen'
 						})
 					}
 					return resolve(JSON.parse(res.data))

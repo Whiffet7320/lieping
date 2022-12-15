@@ -21,9 +21,7 @@
 					<view v-if="item.checkNum>0" class="numBox">{{item.checkNum}}</view>
 					<view class="after"></view>
 				</view>
-				<view style="width: 10rpx;height: 184rpx;">
-
-				</view>
+				<view style="width: 10rpx;height: 184rpx;"></view>
 			</scroll-view>
 			<block v-for="(item,index) in tabbar" :key="index">
 				<scroll-view scroll-y class="right-box" v-if="current==index">
@@ -33,17 +31,8 @@
 								<text>{{item2.title}}</text>
 							</view>
 							<view class="item-container">
-								<view class="thumb-box2">
-									<view @click="quanxuan(item2)" :class="{'box-right':true}">
-										<!-- <view class="txt1">全部{{item2.title}}</view> -->
-										<view class="txt1">全部</view>
-										<!-- <u-icon style='margin-left: 8rpx;' v-if='item3.list && item3.list.length>0'
-											name="arrow-down-fill" color="#000000" size="18"></u-icon>
-										<view v-if="item3.checkNum>0" class="numBox">{{item3.checkNum}}</view> -->
-									</view>
-								</view>
 								<view class="thumb-box2" v-for="(item3,index3) in item2.child" :key="item3.id">
-									<view @click="changeBox(item3,index3,index2,index)"
+									<view @click="changeBox(item3,index3,index)"
 										:class="{'box-right':true,'blue':item3.checked}">
 										<view class="txt1">{{item3.title}}</view>
 										<u-icon style='margin-left: 8rpx;' v-if='item3.child && item3.child.length>0'
@@ -73,9 +62,6 @@
 				</view>
 				<view class="heng"></view>
 				<view class="p1-items">
-					<view @click="quanxuan2" :class="{'p1-item':true}">
-						全部{{item3.title}}
-					</view>
 					<view @click="changeBox1(item)" :class="{'p1-item':true,'blue':item.checked}"
 						v-for="item in bottomList" :key='item.id'>
 						{{item.title}}
@@ -90,96 +76,84 @@
 	export default {
 		// watch: {
 		// 	tabbar: {
-		// 		handler() {
-		// 			var i = 0;
-		// 			this.chooseList = []
-		// 			this.tabbar.forEach(ele => {
-		// 				ele.checkNum = 0
-		// 				if (!ele.items) {
-		// 					return
-		// 				}
-		// 				var arr = ele.items.filter(ele2 => {
-		// 					return ele2.checked
-		// 				})
-		// 				ele.items.forEach(ele3 => {
-		// 					if (ele3.child && ele3.child.length > 0) {
-		// 						ele3.checkNum = ele3.child.filter(ele4 => {
-		// 							console.log(this.idList, 'idList')
-		// 							if (this.idList.indexOf(ele4.id.toString()) > -1) {
-		// 								this.$set(ele4, 'checked', true)
-		// 							}
-		// 							return ele4.checked
-		// 						}).length
-		// 						if (ele3.checkNum != undefined) {
-		// 							ele.checkNum += ele3.checkNum
-		// 							ele3.child.forEach(ele4 => {
-		// 								if (ele4.child && ele4.child.length > 0) {
-		// 									ele4.checkNum = ele4.child.filter(ele5 => {
-		// 										return ele5.checked
-		// 									}).length
-		// 									if (ele4.checkNum != undefined) {
-		// 										ele.checkNum += ele4.checkNum
-		// 									}
-		// 									ele4.child.forEach(ele5 => {
-		// 										console.log(ele5.id, 'ele5-id')
-		// 										if (this.idList.indexOf(ele5.id
-		// 												.toString()) > -1) {
-		// 											this.$set(ele5, 'checked', true)
-		// 											this.$forceUpdate()
-		// 										}
-		// 										if (ele5.checked) {
-		// 											this.chooseList.push(ele5)
-		// 										}
-		// 									})
-		// 								}
-		// 								if (ele4.checked) {
-		// 									this.chooseList.push(ele4)
-		// 								}
-		// 							})
-		// 						}
-		// 					}
-		// 				})
-		// 				arr.forEach(arr_item => {
-		// 					this.chooseList.push(arr_item)
-		// 				})
-		// 				ele.checkNum += arr.length
-		// 				i += ele.checkNum
-		// 				console.log(arr, 'arr')
-		// 				console.log(this.chooseList)
-		// 				if (i > 0) {
-		// 					this.footer_show = true
-		// 				} else {
-		// 					this.footer_show = false
-		// 				}
-		// 			})
-		// 			console.log(this.isOnshow, 'show')
-		// 			if (this.isOnshow) {
-		// 				console.log('hahahahah', i)
-		// 				this.watchTabbar()
-		// 				// this.isOnshow = false
-		// 			}
+		// 		handler(){
+		// 			this.watchTabbar()
 		// 		},
-		// 		// deep: true,
+		// 		// handler() {
+		// 		// 	var i = 0;
+		// 		// 	this.chooseList = []
+		// 		// 	this.tabbar.forEach(ele => {
+		// 		// 		ele.checkNum = 0
+		// 		// 		if (!ele.items) {
+		// 		// 			return
+		// 		// 		}
+		// 		// 		var arr = ele.items.filter(ele2 => {
+		// 		// 			return ele2.checked
+		// 		// 		})
+		// 		// 		ele.items.forEach(ele3 => {
+		// 		// 			if (ele3.child && ele3.child.length > 0) {
+		// 		// 				ele3.checkNum = ele3.child.filter(ele4 => {
+		// 		// 					console.log(this.idList, 'idList')
+		// 		// 					if (this.idList.indexOf(ele4.id.toString()) > -1) {
+		// 		// 						this.$set(ele4, 'checked', true)
+		// 		// 					}
+		// 		// 					return ele4.checked
+		// 		// 				}).length
+		// 		// 				if (ele3.checkNum != undefined) {
+		// 		// 					ele.checkNum += ele3.checkNum
+		// 		// 					ele3.child.forEach(ele4 => {
+		// 		// 						if (ele4.child && ele4.child.length > 0) {
+		// 		// 							ele4.checkNum = ele4.child.filter(ele5 => {
+		// 		// 								return ele5.checked
+		// 		// 							}).length
+		// 		// 							if (ele4.checkNum != undefined) {
+		// 		// 								ele.checkNum += ele4.checkNum
+		// 		// 							}
+		// 		// 							ele4.child.forEach(ele5 => {
+		// 		// 								console.log(ele5.id, 'ele5-id')
+		// 		// 								if (this.idList.indexOf(ele5.id
+		// 		// 										.toString()) > -1) {
+		// 		// 									this.$set(ele5, 'checked', true)
+		// 		// 									this.$forceUpdate()
+		// 		// 								}
+		// 		// 								if (ele5.checked) {
+		// 		// 									this.chooseList.push(ele5)
+		// 		// 								}
+		// 		// 							})
+		// 		// 						}
+		// 		// 						if (ele4.checked) {
+		// 		// 							this.chooseList.push(ele4)
+		// 		// 						}
+		// 		// 					})
+		// 		// 				}
+		// 		// 			}
+		// 		// 		})
+		// 		// 		arr.forEach(arr_item => {
+		// 		// 			this.chooseList.push(arr_item)
+		// 		// 		})
+		// 		// 		ele.checkNum += arr.length
+		// 		// 		i += ele.checkNum
+		// 		// 		// console.log(arr, 'arr')
+		// 		// 		// console.log(this.chooseList)
+		// 		// 		if (i > 0) {
+		// 		// 			this.footer_show = true
+		// 		// 		} else {
+		// 		// 			this.footer_show = false
+		// 		// 		}
+		// 		// 	})
+		// 		// 	console.log(this.isOnshow, 'show')
+		// 		// 	if (this.isOnshow) {
+		// 		// 		console.log('hahahahah', i)
+		// 		// 		this.watchTabbar()
+		// 		// 		// this.isOnshow = false
+		// 		// 	}
+		// 		// },
+		// 		// // deep: true,
 		// 	},
-
-		// 	// item: {
-		// 	// 	handler() {
-		// 	// 		for (let key in this.item) {
-		// 	// 			this.oldItem[key] = this.item[key]
-		// 	// 			if (key == 'list') {
-		// 	// 				this.item[key].forEach((ele,i)=>{
-		// 	// 					for (let key2 in ele) {
-		// 	// 						this.oldItem[key][i][key2] = ele[key2]
-		// 	// 					}
-		// 	// 				})
-		// 	// 			}
-		// 	// 		}
-		// 	// 	},
-		// 	// 	deep: true,
-		// 	// }
 		// },
 		data() {
 			return {
+				flag:false,
 				isOnshow: true,
 				pop1Show: false,
 				keyword: "",
@@ -196,9 +170,10 @@
 				menuItemHeight: 0, // 左边菜单item的高度
 				tabbar: [],
 				item3: {},
-				i2: -1,
-				i3: 0,
-				numList: [],
+				index:"",
+				i3:0,
+				i2:-1,
+				numList:[],
 			}
 		},
 		onShow() {
@@ -207,13 +182,8 @@
 		onLoad(option) {
 			this.idList = option.idList.split(',')
 			this.numList = option.numList.split(',')
-			this.chooseList2 = JSON.parse(option.hangyeList);
-			console.log(this.idList, this.numList, this.chooseList2)
-			if (this.chooseList2.length > 0) {
-				this.footer_show = true
-			} else {
-				this.footer_show = false
-			}
+			console.log(this.idList)
+			this.index = option.index
 		},
 		methods: {
 			async getData() {
@@ -247,17 +217,17 @@
 				})
 				this.tabbar = res.list
 				console.log(this.tabbar, 'onshow')
+				console.log(this.numList,'numList')
 				this.numList.forEach((num, i) => {
 					this.$set(this.tabbar[i], 'checkNum', num)
 				})
 				uni.showToast({
-					icon: 'loading',
+					icon:'loading',
 					duration: 1000,
 				});
-				setTimeout(() => {
-					// this.watchTabbar()
+				setTimeout(()=>{
 					this.wat1()
-				}, 1000)
+				},1000)
 			},
 			wat1() {
 				var i = 0;
@@ -276,13 +246,7 @@
 				}).length
 				console.log(ele.checkNum, 'eleNum')
 				i += ele.checkNum
-				if (i > 0 || this.chooseList2.length > 0) {
-					this.footer_show = true
-				} else {
-					this.footer_show = false
-				}
 				console.log(i, 'iii')
-				console.log(ele.chooseList, 'chooseList')
 			},
 			wat2() {
 				var i = 0;
@@ -303,15 +267,10 @@
 				}
 				console.log(ele.checkNum, 'eleNum')
 				i += ele.checkNum
-				if (i > 0 || this.chooseList2.length > 0) {
-					this.footer_show = true
-				} else {
-					this.footer_show = false
-				}
 				console.log(i, 'iii')
-				console.log(ele.chooseList, 'chooseList')
 			},
 			watchTabbar() {
+				console.log('watchh')
 				var i = 0;
 				this.chooseList = []
 				this.tabbar.forEach(ele => {
@@ -332,13 +291,6 @@
 								return ele4.checked
 							}).length
 							if (ele3.checkNum != undefined) {
-								console.log(ele3.checkNum, 'ele3Num', ele)
-								if (ele3.checkNum == ele.items[0].child.length) {
-									this.chooseList.push({
-										title: ele.items[0].title,
-										id: -1,
-									})
-								}
 								ele.checkNum += ele3.checkNum
 								ele3.child.forEach(ele4 => {
 									if (ele4.child && ele4.child.length > 0) {
@@ -349,10 +301,6 @@
 											ele.checkNum += ele4.checkNum
 										}
 										ele4.child.forEach(ele5 => {
-											// if (this.idList.indexOf(ele5.id.toString()) > -
-											// 	1) {
-											// 	this.$set(ele5, 'checked', true)
-											// }
 											if (ele5.checked) {
 												this.chooseList.push(ele5)
 											}
@@ -370,7 +318,6 @@
 					})
 					ele.checkNum += arr.length
 					i += ele.checkNum
-					console.log(this.chooseList)
 					if (i > 0) {
 						this.footer_show = true
 					} else {
@@ -379,34 +326,10 @@
 				})
 			},
 			onSubmit() {
-				this.chooseList = []
-				var numList = []
-				this.tabbar.forEach(ele => {
-					if (ele.checkNum) {
-						numList.push(ele.checkNum)
-					} else {
-						numList.push(0)
-					}
-					if (ele.chooseList) {
-						ele.chooseList.forEach(ele2 => {
-							this.chooseList.push(ele2)
-						})
-					}
-				})
 				let pages = getCurrentPages()
 				let prevPage = pages[pages.length - 2]
-				console.log(numList, 'numList')
-				console.log(this.chooseList, 'zong Choose')
-				var zongChoose = [...this.chooseList, ...this.chooseList2]
-				var finalList = []
-				zongChoose.forEach(el => {
-					if (!finalList.some(e => e.id == el.id)) {
-						finalList.push(el);
-					}
-				});
-				console.log(finalList);
-				prevPage.$vm.getHangyeData(finalList)
-				prevPage.$vm.getNumList(numList)
+				// console.log(this.chooseList)
+				prevPage.$vm.getHangyeData(this.chooseList,this.index)
 				uni.navigateBack({
 					delta: 1
 				})
@@ -424,31 +347,43 @@
 			qx() {
 				this.pop1Show = false
 				this.$set(this.item3, 'isDK', false)
+				// this.watchTabbar()
 				this.wat2()
 			},
 			qd() {
 				this.pop1Show = false
 				this.$set(this.item3, 'isDK', false)
+				// this.watchTabbar()
 				this.wat2()
 			},
 			toBack() {
+				var numList = []
+				this.tabbar.forEach((ele,i) => {
+					if(i3 == i){
+						numList.push(1)
+					}else{
+						numList.push(0)
+					}
+				})
+				console.log(numList, 'numList')
 				let pages = getCurrentPages()
 				let prevPage = pages[pages.length - 2]
 				// console.log(this.chooseList)
-				prevPage.$vm.getHangyeData(this.chooseList)
+				prevPage.$vm.getHangyeData(this.chooseList,this.index)
+				prevPage.$vm.getNumList(numList,this.index)
 				uni.navigateBack({
 					delta: 1
 				})
-			},
+			}, 
 			quanxuan2() {
 				this.item3.child.forEach(ele => {
 					this.$set(ele, 'checked', true)
 				})
 				this.wat2()
+				// this.watchTabbar()
 			},
 			quanxuan(item) {
 				console.log(item)
-				this.iitem = item
 				item.child.forEach(ele => {
 					if (ele.child.length > 0) {
 						ele.child.forEach(ele2 => {
@@ -459,14 +394,63 @@
 					}
 				})
 				this.wat2()
+				// this.watchTabbar()
 			},
 			changeBox1(item) {
-				this.$set(item, 'checked', !item.checked)
-				this.wat2()
+				// this.$set(item, 'checked', !item.checked)
+				var numList = []
+				this.tabbar.forEach((ele,i) => {
+					if(i3 == i){
+						numList.push(1)
+					}else{
+						numList.push(0)
+					}
+				})
+				console.log(numList, 'numList')
+				this.chooseList = [item]
+				let pages = getCurrentPages()
+				let prevPage = pages[pages.length - 2]
+				prevPage.$vm.getHangyeData(this.chooseList,this.index)
+				prevPage.$vm.getNumList(numList,this.index)
+				uni.navigateBack({
+					delta: 1
+				})
+				// this.watchTabbar()
 			},
-			changeBox(item, i, i2, i3) {
+			changeBox(item, i,i3) {
 				this.item3 = item
+				this.i3 = i3
 				console.log(this.item3, 'item3')
+				this.chooseList = [item]
+				var numList = []
+				this.tabbar.forEach((ele,i) => {
+					if(i3 == i){
+						numList.push(1)
+					}else{
+						numList.push(0)
+					}
+				})
+				console.log(numList, 'numList')
+				let pages = getCurrentPages()
+				let prevPage = pages[pages.length - 2]
+				prevPage.$vm.getHangyeData(this.chooseList,this.index)
+				prevPage.$vm.getNumList(numList,this.index)
+				uni.navigateBack({
+					delta: 1
+				})
+				// console.log(item,i,this.tabbar)
+				// this.item = item
+				// for (let key in this.item) {
+				// 	this.oldItem[key] = this.item[key]
+				// 	if (key == 'child') {
+				// 		this.item[key].forEach((ele, i) => {
+				// 			for (let key2 in ele) {
+				// 				this.oldItem[key][i][key2] = ele[key2]
+				// 			}
+				// 		})
+				// 	}
+				// }
+				// console.log(this.oldItem)
 				this.$set(item, 'isDK', true)
 				if (item.child.length > 0) {
 					this.bottomList = item.child ? item.child : [];
@@ -474,25 +458,14 @@
 					this.$set(item, 'isDK', !item.checked)
 				} else {
 					this.$set(item, 'checked', !item.checked)
-					this.chooseList2 = this.chooseList2.filter(elee => {
-						console.log(elee.id, item.id, 'idd')
-						return elee.id != item.id
-					})
-					console.log(this.chooseList2, 'chooseList2')
-					// if (this.chooseList2.indexOf(item.id.toString()) > -1) {
-
-					// }
 				}
-				console.log(this.item3, 'item33')
-				this.i3 = i3
-				this.i2 = i2
-				this.wat2()
+				// this.watchTabbar()
 			},
 			// 点击左边的栏目切换
 			async swichMenu(index) {
 				if (index == this.current) return;
 				this.current = index;
-				this.i3 = index;
+				this.i3 = index
 				// 如果为0，意味着尚未初始化
 				if (this.menuHeight == 0 || this.menuItemHeight == 0) {
 					await this.getElRect('menu-scroll-view', 'menuHeight');

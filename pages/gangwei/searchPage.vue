@@ -1,13 +1,18 @@
 <template>
 	<view class="index">
-		<view class="top"></view>
+		<!-- <view class="top"></view>
 		<view class="nav1">
 			<u-icon @click='toBack' style='margin-right: 12rpx;' name="arrow-left" color="#000000" size="36"></u-icon>
-			<!-- <view class="n1-txt">设置导航</view> -->
 			<view @click="isGuonei = true" :class="{'n1-txt2':true,'active':isGuonei}">国内</view>
 			<view @click="isGuonei = false" :class="{'n1-txt2':true,'active':!isGuonei}">海外</view>
-		</view>
-		<view style="margin-top: calc(176rpx);" class="nav2">
+		</view> -->
+		<u-navbar back-icon-size='36'>
+			<view class="nn">
+				<view style="margin: 0 35rpx 0 170rpx;" @click="isGuonei = true" :class="{'n1-txt2':true,'active':isGuonei}">国内</view>
+				<view @click="isGuonei = false" :class="{'n1-txt2':true,'active':!isGuonei}">海外</view>
+			</view>
+		</u-navbar>
+		<view class="nav2">
 			<searchPage :isGuonei='isGuonei' @on-select="City"></searchPage>
 		</view>
 	</view>
@@ -59,6 +64,36 @@
 <style lang="scss" scoped>
 	.index {
 		position: relative;
+	}
+	.nn{
+		display: flex;
+		align-items: center;
+		.n1-txt2 {
+			font-size: 32rpx;
+			font-family: PingFangSC, PingFangSC-Regular;
+			font-weight: 400;
+			color: #000000;
+			line-height: 44rpx;
+			margin: 0 35rpx;
+			// margin-left: 100rpx;
+		}
+		
+		.n1-txt2.active {
+			font-weight: 600;
+			font-size: 36rpx;
+			position: relative;
+		
+			&::after {
+				content: '';
+				width: 32rpx;
+				height: 4rpx;
+				background: #1362FD;
+				position: absolute;
+				top: 66rpx;
+				left: 50%;
+				transform: translateX(-50%);
+			}
+		}
 	}
 
 	.top {

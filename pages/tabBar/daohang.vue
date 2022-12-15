@@ -1,11 +1,12 @@
 <template>
 	<view class="index">
 		<u-toast ref="uToast" />
-		<view class="top"></view>
+		<!-- <view class="top"></view>
 		<view class="nav1">
 			<view class="n1-txt">导航介绍</view>
-		</view>
-		<view style="margin-top: calc(176rpx + 24rpx);" class="nav2">
+		</view> -->
+		<u-navbar background='#f8faff' back-text="导航介绍" back-icon-size='36'></u-navbar>
+		<view style="margin-top: calc(24rpx);" class="nav2">
 			<image class="n2-img" src="/static/newImage/tabBar/weitu.png" mode=""></image>
 			<view class="n2-right">
 				<view class="txt1">猎头导航</view>
@@ -14,7 +15,7 @@
 			</view>
 		</view>
 		<view class="nav3">
-			<view class="n3-l">链接：{{url}}</view>
+			<view class="n3-l">链接：<text :class="{'mohu':userObj.is_joincompany == 0}">{{url2}}</text></view>
 			<view v-if="true" class="n3-r" @click="fuzhi">
 				<image class="immg" src="/static/newImage/tabBar/bianzu12.png" mode=""></image>
 				<view class="txx">复制</view>
@@ -71,16 +72,26 @@
 			<view class="txt5-1" style="top: 586rpx;left: 42rpx;font-size: 26rpx;">安装后不要点桌面图标</view>
 			<view class="txt5-1" style="top: 558rpx;left: 480rpx;width: 196rpx;">右侧浮窗插件显示简历分析结果</view>
 		</view>
-		<u-tabbar active-color="#121212" icon-size='60' height='120' mid-button-size="150" v-model="current"
-			:list="tabbarlist" :mid-button="true"></u-tabbar>
+		<u-tabbar active-color="#121212" icon-size='60' height='120' mid-button-size="156" v-model="current"
+			:list="tabbarlist" @change='changeTabbar' :mid-button="true"></u-tabbar>
 	</view>
 </template>
 
 <script>
+	import {
+		mapGetters,
+		mapState
+	} from "vuex";
 	export default {
+		computed: {
+			...mapGetters(['isLogin']),
+			...mapState(['haveDot'])
+		},
 		data() {
 			return {
-				url: 'http://www.1234567baidu.com',
+				url: 'd.lietoudaohang.com/Setup.exe',
+				url2: 'd.lietoudaohang.com/Setup.exe',
+				logo: "",
 				tabbarlist: [{
 						iconPath: "/static/newImage/tabBarIcon/1-1.png",
 						selectedIconPath: "/static/newImage/tabBarIcon/1-2.png",
@@ -115,24 +126,99 @@
 						selectedIconPath: "/static/newImage/tabBarIcon/4-2.png",
 						text: '我的',
 						customIcon: false,
-						pagePath: "/pages/tabBar/wode"
+						pagePath: "/pages/tabBar/wode",
+						isDot: false,
 					},
 				],
-				current: 2
+				current: 2,
+				isGLY: null,
+				userObj: {},
 			}
 		},
+		onShow() {
+			this.$set(this.tabbarlist[4], 'isDot', this.haveDot)
+			this.getLogo();
+			this.getUserInfo()
+		},
 		methods: {
+			async getUserInfo() {
+				const res = await this.$api.user_info()
+				this.userObj = res
+				if (res.result == 1) {
+					uni.setStorageSync('userObj', this.userObj);
+				}
+				if (this.userObj.joincompany.com_ismanage == 1) {
+					this.isGLY = true
+				} else {
+					this.isGLY = false
+				}
+				if (this.userObj.notify_num > 0) {
+					this.$store.commit('haveDot', true)
+				} else {
+					this.$store.commit('haveDot', false)
+				}
+				this.$set(this.tabbarlist[4], 'isDot', this.haveDot)
+				console.log(this.isGLY)
+			},
+			async getLogo() {
+				const res = await this.$api.headhunt_logo()
+				this.logo = res.logopic_url
+			},
+			// changeTabbar(i) {
+			// 	if (i == 2) {
+			// 		if (!this.isGLY) {
+			// 			this.$refs.uToast.show({
+			// 				title: '您不是管理员,无法创建岗位',
+			// 			})
+			// 		} else if (this.noJoin) {
+			// 			this.$refs.uToast.show({
+			// 				title: '您未加入猎企,无法创建岗位',
+			// 			})
+			// 		} else {
+			// 			uni.navigateTo({
+			// 				url: '/pages/gangwei/chuanjiangangwei'
+			// 			})
+			// 		}
+			// 	}
+			// },
+			changeTabbar(i) {
+				if (i == 2) {
+					// if (!this.isGLY) {
+					// 	this.$refs.uToast.show({
+					// 		title: '您不是管理员,无法创建岗位',
+					// 	})
+					// } else if (this.noJoin) {
+					// 	this.$refs.uToast.show({
+					// 		title: '您未加入猎企,无法创建岗位',
+					// 	})
+					// } else {
+					// 	uni.navigateTo({
+					// 		url: '/pages/gangwei/chuanjiangangwei'
+					// 	})
+					// }
+					uni.navigateTo({
+						url: '/pages/gangwei/chuanjiangangwei'
+					})
+				}
+			},
 			fuzhi() {
-				uni.setClipboardData({
-					data: this.url,
-					showToast: false,
-					success: ()=> {
-						uni.hideToast();
-						this.$refs.uToast.show({
-							title: '已复制，请到电脑端下载',
-						})
-					}
-				});
+				if (this.userObj.is_joincompany == 0) {
+					uni.navigateTo({
+						url: '/pages/wode/jiaru'
+					})
+				} else {
+					uni.setClipboardData({
+						data: this.url,
+						showToast: false,
+						success: () => {
+							uni.hideToast();
+							uni.showToast({
+								title: "已复制，请到电脑端下载",
+								icon: "success"
+							})
+						}
+					});
+				}
 			},
 		}
 	}
@@ -144,11 +230,41 @@
 	}
 </style>
 <style lang="scss" scoped>
-	/deep/ .u-position-center{
+	/deep/ .u-navbar-fixed {
+		background: #fff !important;
+	}
+
+	/deep/ .u-position-center {
 		width: 412rpx;
 	}
+
 	.index {
 		position: relative;
+	}
+
+	/deep/ .u-tabbar__content__circle__button {
+		top: -10rpx !important;
+	}
+
+	/deep/ .u-tabbar__content__circle__border {
+		height: 0 !important;
+		width: 0 !important;
+	}
+
+	/deep/ .u-navbar {
+		.u-icon__icon {
+			margin-left: 8rpx;
+			font-weight: 600 !important;
+			color: #000 !important;
+			display: none;
+		}
+
+		.u-back-text {
+			font-size: 36rpx;
+			margin-left: 8rpx;
+			font-weight: 600;
+			color: #000 !important;
+		}
 	}
 
 	.top {
@@ -237,6 +353,10 @@
 			font-family: PingFangSC, PingFangSC-Regular;
 			font-weight: 400;
 			color: #6c6c6c;
+
+			.mohu {
+				filter: blur(4rpx);
+			}
 		}
 
 		.n3-r {

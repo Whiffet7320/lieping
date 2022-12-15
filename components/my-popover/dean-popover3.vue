@@ -9,8 +9,7 @@
 					top: modalTopPos,
 					left: modalLeftPos,
 					opacity: show?'1' : '0',
-					'z-index': show?'99999' : '-10',
-					height:isFabu?'352rpx':'280rpx'
+					'z-index': show?'99999' : '-10'
 				}">
 				<!-- <view class="modal-ang" v-if="dotShow && btnList.length > 0" :style="direction !== 'left' ? 'left: 10px': 'right: 10px'"></view>
 				<view class="modal-item" v-for="(item, index) in btnList" :index="index" :key="index" @tap="callRes(item)">
@@ -18,13 +17,14 @@
 				</view> -->
 				<image @click="closeBtn" class="float-img" src="/static/newImage/tabBar/zu11.png" mode="">
 				</image>
-				<view v-if="isshow" @tap.stop="callRes('发布到求职端')" :class="{'m-tit1':isFabu,'no':!isFabu}">发布到求职端</view>
-				<button @tap.stop="callRes('转发')" open-type="share" v-if="isFabu" :class="{'m-tit2':isFabu,'non':!isFabu}">转发</button>
-				<view @tap.stop="callRes('应聘')" class="m-tit3">
+				<view style="margin-top: 50rpx;" @tap.stop="callRes('应聘')" class="m-tit3">
 					<view v-if="num != '0'" class="red"></view>
 					<view class="txx">应聘<text class="span">({{num}})</text></view>
 				</view>
-				<view @tap.stop="callRes('下架')" class="m-tit4">下架</view>
+				<!-- <button style="margin-top: 50rpx;" @tap="callRes('应聘')" class="m-tit2">应聘</button> -->
+				<view @tap="callRes('重启')" class="m-tit3">
+					<view class="txx">重启</view>
+				</view>
 			</view>
 		</view>
 	</view>
@@ -55,8 +55,6 @@
 					scollTop: '',
 					val: "",
 				},
-				shareTitle:'',
-				user_id:"",
 			};
 		},
 		watch: {
@@ -71,18 +69,32 @@
 		},
 		// 用户点击右上角分享转发
 		onShareAppMessage: async function() {
-			console.log('123456789')
+			// const res = await this.$api.userShare({
+			// 	way: 2,
+			// 	product_id: this.product_id
+			// });
+			// // console.log(res)
+		
+			// var title = '分销商城app'; //data，return 数据title
+			// return {
+			// 	title: title || '',
+			// 	path: `/pages/index/index?scene=0_${res.share_userid}`,
+			// }
 			return {
-				title: this.shareTitle,
-				path: `/pages/qzz/zhiweixiangqin?scene=${this.post_ids}_${this.user_id}`,
+				title: '123546',
+				path: `/pages/index/index?scene=0_${1}`,
 			}
 		},
 		//用户点击右上角分享朋友圈
 		onShareTimeline: async function() {
-			var title = this.shareTitle; //data，return 数据title
+			const res = await this.$api.userShare({
+				way: 2,
+				product_id: this.product_id
+			});
+			var title = '分销商城app'; //data，return 数据title
 			return {
 				title: title || '',
-				path: `/pages/qzz/zhiweixiangqin?scene=${this.post_ids}_${this.user_id}`,
+				path: `/pages/index/index?scene=0_${res.share_userid}`,
 			}
 		},
 		props: {
@@ -118,44 +130,17 @@
 				type: String,
 				default: 'left'
 			},
-			active: {
-				type: Boolean,
-				default: false
-			},
-			isFabu: {
-				type: Boolean,
-				default: false
-			},
-			isshow: {
-				type: Boolean,
-				default: false
-			},
 			num: {
 				type: String,
 				default: '0'
 			},
-			post_ids:{
-				type: String,
-				default: ''
-			},
+			active: {
+				type: Boolean,
+				default: false
+			}
 		},
 		methods: {
-			async callRes(val) {
-				// if (val == '转发') {
-				// 	if(!this.isFabu){
-				// 		return
-				// 	}
-				// 	const res = await this.$api.tokentouserid({
-				// 		token: uni.getStorageSync('token'),
-				// 	})
-				// 	this.user_id = res.user_id
-				// 	const res2 = await this.$api.share_jobpost({
-				// 		post_ids: this.post_ids,
-				// 		share_fromuserid: this.user_id
-				// 	})
-				// 	this.shareTitle = `职位-${res2.job_post.jobs}-${res2.job_post.salary_range}`
-				// 	this.$emit('select2', this.shareTitle);
-				// }
+			callRes(val) {
 				this.emitObj.val = val
 				this.$emit('select', this.emitObj);
 				this.emitObj.val = ''
@@ -188,7 +173,7 @@
 	.compos {
 		position: relative;
 		height: 0;
-		z-index: 19999;
+
 		.modal {
 			background-color: #f8faff;
 			position: absolute;
@@ -197,7 +182,7 @@
 			z-index: 999;
 			box-shadow: 0rpx 4rpx 8rpx 0rpx rgba(0, 0, 0, 0.11);
 			width: calc(244rpx);
-			height: 352rpx;
+			height: 218rpx;
 			padding: 0 32rpx;
 			background: #f8faff;
 			border-radius: 10rpx;
@@ -221,28 +206,6 @@
 				margin-top: 50rpx;
 				line-height: 70rpx;
 				border-bottom: 2rpx solid #efefef;
-			}
-
-			.no {
-				height: 70rpx;
-				font-size: 28rpx;
-				font-family: PingFangSC, PingFangSC-Regular;
-				font-weight: 400;
-				text-align: center;
-				margin-top: 50rpx;
-				line-height: 70rpx;
-				border-bottom: 2rpx solid #efefef;
-				color: #121212;
-			}
-			.non{
-				height: 70rpx;
-				font-size: 28rpx;
-				font-family: PingFangSC, PingFangSC-Regular;
-				font-weight: 400;
-				text-align: center;
-				line-height: 70rpx;
-				border-bottom: 2rpx solid #efefef;
-				color: #b4b4b4;
 			}
 
 			.m-tit2 {
@@ -303,11 +266,10 @@
 		justify-content: center;
 		box-sizing: border-box;
 	}
-
 	button::after {
 		border: none;
 	}
-
+	
 	button {
 		position: relative;
 		display: block;

@@ -22,7 +22,10 @@ export default new Vuex.Store({
 		addressInfo:null,
 		onResh:false,
 		proInfo:{},
-		orderInfo:{}
+		orderInfo:{},
+		haveDot:false,
+		shareTitle:"",
+		post_id:"",
 	},
 	mutations: {
 		searchList(state, str) {
@@ -32,6 +35,15 @@ export default new Vuex.Store({
 			if (state.searchList.length > 10) {
 				state.searchList.pop()
 			}
+		},
+		post_id(state, str) {
+			state.post_id = str;
+		},
+		shareTitle(state, str) {
+			state.shareTitle = str;
+		},
+		haveDot(state, str) {
+			state.haveDot = str;
 		},
 		from(state, str) {
 			state.from = str;

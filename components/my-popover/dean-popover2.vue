@@ -9,7 +9,8 @@
 					top: modalTopPos,
 					left: modalLeftPos,
 					opacity: show?'1' : '0',
-					'z-index': show?'99999' : '-10'
+					'z-index': show?'99999' : '-10',
+					height:haveZf?'220rpx':'140rpx'
 				}">
 				<!-- <view class="modal-ang" v-if="dotShow && btnList.length > 0" :style="direction !== 'left' ? 'left: 10px': 'right: 10px'"></view>
 				<view class="modal-item" v-for="(item, index) in btnList" :index="index" :key="index" @tap="callRes(item)">
@@ -17,11 +18,19 @@
 				</view> -->
 				<image @click="closeBtn" class="float-img" src="/static/newImage/tabBar/zu11.png" mode="">
 				</image>
-				<view style="margin-top: 50rpx;" @tap="callRes('转发')" class="m-tit2">转发</view>
-				<view @tap="callRes('应聘')" class="m-tit3">
-					<view class="red"></view>
-					<view class="txx">应聘<text class="span">(5)</text></view>
-				</view>
+				<template v-if="haveZf">
+					<button style="margin-top: 50rpx;" @tap="callRes('转发')" open-type="share" class="m-tit2">转发</button>
+					<view @tap="callRes('应聘')" class="m-tit3">
+						<view v-if="num != '0'" class="red"></view>
+						<view class="txx">应聘<text class="span">({{num}})</text></view>
+					</view>
+				</template>
+				<template v-else>
+					<view style="margin-top: 50rpx;" @tap="callRes('应聘')" class="m-tit3">
+						<view v-if="num != '0'" class="red"></view>
+						<view class="txx">应聘<text class="span">({{num}})</text></view>
+					</view>
+				</template>
 			</view>
 		</view>
 	</view>
@@ -64,6 +73,36 @@
 				this.show = this.active
 			}
 		},
+		// 用户点击右上角分享转发
+		onShareAppMessage: async function() {
+			// const res = await this.$api.userShare({
+			// 	way: 2,
+			// 	product_id: this.product_id
+			// });
+			// // console.log(res)
+
+			// var title = '分销商城app'; //data，return 数据title
+			// return {
+			// 	title: title || '',
+			// 	path: `/pages/index/index?scene=0_${res.share_userid}`,
+			// }
+			return {
+				title: '123546',
+				path: `/pages/index/index?scene=0_${1}`,
+			}
+		},
+		//用户点击右上角分享朋友圈
+		onShareTimeline: async function() {
+			const res = await this.$api.userShare({
+				way: 2,
+				product_id: this.product_id
+			});
+			var title = '分销商城app'; //data，return 数据title
+			return {
+				title: title || '',
+				path: `/pages/index/index?scene=0_${res.share_userid}`,
+			}
+		},
 		props: {
 			btnList: {
 				type: Array,
@@ -100,7 +139,15 @@
 			active: {
 				type: Boolean,
 				default: false
-			}
+			},
+			num: {
+				type: String,
+				default: '0'
+			},
+			haveZf: {
+				type: Boolean,
+				default: false
+			},
 		},
 		methods: {
 			callRes(val) {
@@ -145,7 +192,7 @@
 			z-index: 999;
 			box-shadow: 0rpx 4rpx 8rpx 0rpx rgba(0, 0, 0, 0.11);
 			width: calc(244rpx);
-			height: 218rpx;
+			height: 140rpx;
 			padding: 0 32rpx;
 			background: #f8faff;
 			border-radius: 10rpx;
@@ -228,5 +275,29 @@
 		align-items: center;
 		justify-content: center;
 		box-sizing: border-box;
+	}
+
+	button::after {
+		border: none;
+	}
+
+	button {
+		position: relative;
+		display: block;
+		margin-left: 0;
+		margin-right: 0;
+		padding-left: 0px;
+		padding-right: 0px;
+		box-sizing: border-box;
+		// font-size: 18px;
+		text-align: center;
+		text-decoration: none;
+		// line-height: 1;
+		line-height: 1.35;
+		// border-radius: 5px;
+		-webkit-tap-highlight-color: transparent;
+		overflow: hidden;
+		color: #000000;
+		background-color: #f8faff;
 	}
 </style>

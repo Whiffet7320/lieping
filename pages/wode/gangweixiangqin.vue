@@ -1,26 +1,29 @@
 <template>
 	<view class="index">
-		<view class="top"></view>
+		<!-- <view class="top"></view>
 		<view class="nav1">
 			<u-icon @click='toBack' style='margin-right: 12rpx;' name="arrow-left" color="#000000" size="36"></u-icon>
 			<view @click='toBack' class="n1-txt">岗位详情</view>
-		</view>
-		<view style="margin-top: calc(176rpx + 20rpx);" class="nav2">
+		</view> -->
+		<u-navbar back-text="岗位详情" back-icon-size='36'></u-navbar>
+		<view style="margin-top: calc(20rpx);" class="nav2">
 			<view class="tit1">招聘企业</view>
-			<view class="tit2">天宇传媒有限公司</view>
+			<view class="tit2">{{dataObj.position_view.com_name}}</view>
 			<view style="margin-top: 44rpx;" class="tit1">内部识别名称</view>
-			<view class="tit2">天宇传媒有限公司</view>
+			<view class="tit2">{{dataObj.position_view.internal_name}}</view>
+			<view style="margin-top: 44rpx;" class="tit1">岗位</view>
+			<view class="tit2">{{dataObj.position_view.jobs}}</view>
 			<view style="margin-top: 44rpx;" class="tit1">工作地点</view>
-			<view class="tit2">上海</view>
+			<view class="tit2">{{dataObj.position_view.work_place}}</view>
 			<view style="margin-top: 44rpx;" class="tit1">薪酬</view>
-			<view class="tit2">3k~4k*12薪</view>
+			<view class="tit2">{{dataObj.position_view.salary_range}}</view>
 		</view>
 		<view class="nav3">
 			<u-icon name="info-circle" color="#EB2F2F" size="36"></u-icon>
-			<view class="txxx">下架原因：禁止企业实名</view>
+			<view class="txxx">下架原因：{{reason}}</view>
 		</view>
 		<view class="footer">
-			<view class="btn">重新创建</view>
+			<view @click="toGangwei" class="btn">重新创建</view>
 		</view>
 	</view>
 </template>
@@ -29,16 +32,30 @@
 	export default{
 		data(){
 			return{
-				
+				id:"",
+				reason:"",
+				dataObj:{},
 			}
 		},
 		onShow() {
-			
+			this.getData()
 		},
-		onLoad() {
-			
+		onLoad(option) {
+			this.id = option.id;
+			this.reason = option.reason
 		},
 		methods:{
+			async getData(){
+				const res = await this.$api.position_view({
+					id:this.id
+				})
+				this.dataObj = res
+			},
+			toGangwei(){
+				uni.navigateTo({
+					url:'/pages/gangwei/chuanjiangangwei'
+				})
+			},
 			toBack(){
 				uni.navigateBack({
 					delta:1

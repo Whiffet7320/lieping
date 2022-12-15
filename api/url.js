@@ -1,34 +1,53 @@
 export default {
-	baseUrl: 'https://pangxie.xingmangkeji.cn', // http://192.168.50.142:8098  //https://ceshi.xingmangkeji.cn
-	userInfo: "/api/user_info", //用户信息
-	loginWechat: '/api/mini_login',//微信登录
-	updateUserInfo:"/api/update_user_info",//修改用户信息
-	product:'/api/product_detail',//商品信息
-	login:'/api/login',//账户密码登录
-	saveAddress:"/api/save_address",//地址新增/编辑
-	addressList:"/api/address_list",//收货地址
-	delAddress:"/api/del_address",//删除收货地址
-	orderPay:"/api/order_pay", //立即购买
-	yzrealName:"/api/real_name",//实名验证
-	send_sms:'/api/send_sms',//发送短信
-	register:'/api/register',//账户注册
-	captch_login:'/api/captch_login',//验证码登录
-	forgetpwd:'/api/forgetpwd',//忘记密码
-	updatepwd:"/api/update_password",//修改密码
-	bindBank:"/api/bind_bank",//绑定银行卡
-	userBanklist:"/api/user_bank_list",//银行卡列表
-	delBank:"/api/del_bank",//银行卡删除
-	orderList:"/api/order_list",//订单列表
-	confirmOrder:"/api/confirm_order",//确认收货
-	delOrder:"/api/del_order",//删除订单
-	notice:"/api/notice",//首页滚动消息
-	recharge:'/api/recharge',//用户充值
-	integral_list:'/api/integral_list',//积分列表
-	withdraw_list:'/api/withdraw_list',//提现列表
-	set_pay_password:'/api/set_pay_password',//设置支付密码
-	spread:'/api/spread',//分享
-	walletlist:"/api/wallet_list" ,//我的钱包
-	wait_pay:'/api/wait_pay',//
-	exress_detail:'/api/exress_detail',//快递查询
-	withdraw:'/api/withdraw',//提现
+	uploadToken:'/aliyun_osssts',//上传测试
+	// 
+	baseUrl:'https://api.lietoudaohang.com/service/app',
+	wx_login:'/wx_login',//微信登录
+	user_upinfo:'/user_upinfo',//选择身份
+	user_agreement:"/user_agreement",//用户协议
+	user_info:"/user_info",//用户信息
+	join_enterprise:"/join_enterprise",//加入猎企
+	authentication_enterprise:"/authentication_enterprise",//认证猎企
+	authentication_enterpriseview:'/authentication_enterpriseview',//认证猎企详情
+	user_team:'/user_team',//团队列表
+	team_operation:"/team_operation",//修改团队内成员为管理员或成员
+	user_notify:'/user_notify',//通知列表
+	user_notifyread:'/user_notifyread',//通知设为已读
+	user_notifydel:"/user_notifydel",//通知删除
+	problem_list:"/problem_list",//问题列表
+	create_position:"/create_position",//创建岗位
+	position_list:"/position_list",//猎聘端岗位列表
+	position_making:'/position_making',//做单
+	industryscategory:"/industryscategory",//行业分类
+	set_postnavigation:'/set_postnavigation',//设置导航
+	jobcategory:"/jobcategory",//岗位分类
+	foreignlanguage:"/foreignlanguage",//外语种类列表
+	position_userdel:"/position_userdel",//猎聘端岗位删除
+	postnavigation_view:'/postnavigation_view',//导航详情
+	position_useroperation:'/position_useroperation',//上下架岗位
+	compost_jobpost:"/compost_jobpost",//转发到求职端
+	headhunt_logo:"/headhunt_logo",//猎头端logo
+	compost_progresslist:"/compost_progresslist",//猎头端岗位进展
+	positionstatistics_list:'/positionstatistics_list',//猎头端岗位统计
+	positionstatistics_statusset:'/positionstatistics_statusset',//猎头端岗位统计设置状态
+	jobpost_view:"/jobpost_view",//求职端岗位详情
+	position_view:"/position_view",//岗位详情
+	teamstatistics_list:"/teamstatistics_list",//成员统计
+	jobpost_list:"/jobpost_list",//求职端岗位列表
+	compost_candidate:"/compost_candidate",//猎头端岗位应聘列表
+	compost_candidateview:"/compost_candidateview",//猎头端岗位应聘详情
+	jobpost_candidate:"/jobpost_candidate",//匹配分析--创建简历
+	share_jobpost:"/share_jobpost",//分享求职端岗位
+	tokentouserid:'/tokentouserid',//通过token获取用户ID
+	jobpost_candidateanalysis:"/jobpost_candidateanalysis",//匹配分析--分析结果
+	acceptjobs_operation:"/acceptjobs_operation",//应聘操作
+	acceptjobs_view:'/acceptjobs_view',//应聘时个人信息
+	swiper_list:"/swiper_list",//广告列表
+	view_qrcode:'/view_qrcode',//获取插件端小程序状态
+	check_qrcode:'/check_qrcode',//确定登录插件端的操作
+	position_checkview:"/position_checkview",//获取上一次岗位数据
+	user_edituserinfo:"/user_edituserinfo",//修改头像昵称
+	jobpost_candidateview:"/jobpost_candidateview",//求职端简历详情
+	sendsms:'/sendsms',//发送短信验证码
 }
+	

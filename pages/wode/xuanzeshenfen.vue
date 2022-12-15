@@ -1,5 +1,6 @@
 <template>
 	<view class="index">
+		<u-toast ref="uToast" />
 		<view class="top"></view>
 		<view class="nav1">
 			<!-- <u-icon style='margin-right: 12rpx;' name="arrow-left" color="#000000" size="36"></u-icon> -->
@@ -24,7 +25,9 @@
 				<image v-if="!isLT" class="gou" src="/static/newImage/wode/lujin12.png" mode=""></image>
 			</view>
 		</view>
+		<view style="width:100vw;height: 300rpx;"></view>
 		<view @click="toShouye" class="btn">完成</view>
+		<view style="width:100vw;height: 80rpx;"></view>
 	</view>
 </template>
 
@@ -35,24 +38,34 @@
 				isLT: true,
 			}
 		},
-		onShow() {
-
+		async onShow() {
+			const res = await this.$api.user_info()
+			this.userObj = res
+			console.log(res, 'res')
 		},
 		onLoad() {
 
 		},
 		methods: {
-			toShouye() {
-				if (this.isLT) {
-					uni.switchTab({
-						url: '/pages/tabBar/index'
-					})
-				} else {
-					uni.navigateTo({
-						url: '/pages/tabBar/qzz_sy'
-					})
-				}
-
+			async toShouye() {
+				const res = await this.$api.user_upinfo({
+					category: this.isLT ? 1 : 2
+				})
+				this.$refs.uToast.show({
+					title: res.msg,
+					duration:700,
+					callback: () => {
+						if (this.isLT) {
+							uni.switchTab({
+								url: '/pages/tabBar/index'
+							})
+						} else {
+							uni.navigateTo({
+								url: '/pages/tabBar/qzz_sy'
+							})
+						}
+					}
+				})
 			},
 			toBack() {
 				uni.navigateBack({
@@ -231,9 +244,9 @@
 	}
 
 	.btn {
-		position: fixed;
-		bottom: 72rpx;
-		left: 90rpx;
+		// position: fixed;
+		// bottom: 72rpx;
+		margin-left: 90rpx;
 		width: 570rpx;
 		height: 96rpx;
 		background: #1362fd;

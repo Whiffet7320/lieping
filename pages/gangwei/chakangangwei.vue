@@ -1,46 +1,48 @@
 <template>
 	<view class="index">
-		<view class="top"></view>
+		<!-- <view class="top"></view>
 		<view class="nav1">
 			<u-icon @click='toBack' style='margin-right: 12rpx;' name="arrow-left" color="#000000" size="36"></u-icon>
 			<view @click='toBack' class="n1-txt">岗位详情</view>
-		</view>
-		<view style="margin-top: calc(176rpx + 16rpx);" class="nav2 nav3 nav4">
+		</view> -->
+		<u-navbar back-text="岗位详情" back-icon-size='36'></u-navbar>
+		<view style="margin-top: calc(16rpx);" class="nav2 nav3 nav4">
 			<view class="n2-box">
 				<view class="n2b-tit1">招聘企业</view>
-				<view class="n2b-tit22">天宇传媒有限公司</view>
+				<view class="n2b-tit22">{{objData.com_name}}</view>
 				<view style="margin-top: 44rpx;" class="n2b-tit1">内部识别名称</view>
-				<view class="n2b-tit22">天宇传媒有限公司</view>
+				<view class="n2b-tit22">{{objData.internal_name}}</view>
 				<view style="margin-top: 44rpx;" class="n2b-tit1">工作地点</view>
-				<view class="n2b-tit22">上海</view>
+				<view class="n2b-tit22">{{objData.work_place}}</view>
 				<view style="margin-top: 44rpx;" class="n2b-tit1">薪酬</view>
-				<view class="n2b-tit22">3k~4k*12薪</view>
+				<view class="n2b-tit22">{{objData.salary_range}}</view>
 				
 				<view style="display: flex;align-items: center;margin-top: 46rpx;justify-content: space-between;"
 					class="flex">
 					<view class="n2b-tit1">理解岗位<text class="red">*仅团队成员可见</text></view>
-					<view class="xxx"><text style="color: #095bfe;">{{num}}</text>/12</view>
+					<view class="xxx"><text style="color: #095bfe;">{{nowIndex+1}}</text>/{{wtTotal}}</view>
 				</view>
 				<view class="bbx">
-					<view class="b-l">1.核心工作内容和业务场景是什么？</view>
-					<view class="b-r">
-						<!-- <image @click="delAudio" class="iconImg" src="/static/newImage/tabBar/shanchu.png" mode=""></image> -->
+					<view class="b-l">{{nowIndex+1}}.{{wtList[nowIndex].question}}？</view>
+					<view class="b-r" v-if="voiceList[nowIndex].src !=''">
+						<!-- <image @click="delAudio" class="iconImg" src="/static/newImage/tabBar/shanchu.png" mode="">
+						</image> -->
 						<view class="br-b" @click="playAudio">
-							<view class="txxt">{{time}}″</view>
-							<image class="iconImg2" src="/static/newImage/tabBar/yuyin.png" mode=""></image>
+							<view class="txxt">{{voiceList[nowIndex].time}}″</view>
+							<image :style="{'opacity':(isDisplay ? 0 : 1)}" class="iconImg2"
+								src="/static/newImage/tabBar/yuyin.png" mode=""></image>
 						</view>
 					</view>
 				</view>
 				<view class="btns2">
-					<view style="margin-right: 40rpx;" :class="{'b2-3':true,'no':num == 1}">上一个</view>
-					<view :class="{'b2-3':true,'no':num == 12}">下一个</view>
-					<!-- <view @touchstart="start" @touchmove="move" @touchend="end" class="b2-3">按住说话</view> -->
+					<view @click="beforeWt" :class="{'b2-1':true,'no':nowIndex == 0}">上一个</view>
+					<view @click="nextWt" :class="{'b2-1':true,'no':nowIndex == wtTotal - 1}">下一个</view>
 				</view>
 			</view>
 		</view>
-		<view class="footer">
+<!-- 		<view class="footer">
 			<view @click="onSubmit" class="f-btn">完成</view>
-		</view>
+		</view> -->
 
 	</view>
 </template>
@@ -197,18 +199,105 @@
 				voicePath: null,
 				isOnsubmit:false,
 				isOnsubmit2:false,
+				post_id:"",
+				isGLY:"",
+				objData:{},
+				wtList:[],
+				wtTotal:0,
+				nowIndex:0,
+				voiceList:[],
+				isDisplay: false,
+				timer2:null,
 			}
 		},
 		onShow() {
-
+			this.getData()
 		},
-		onLoad() {
+		async onLoad(option) {
 			recorderManager.onStop(res=> {
 				console.log('recorder stop1' + JSON.stringify(res));
 				this.voicePath = res.tempFilePath;
 			});
+			this.post_id = option.post_id
+			this.isGLY = option.isGLY
+			if (this.post_id) {
+				this.getGWXQData()
+			}
+			if (this.post_id != '') {
+				const res = await this.$api.tokentouserid({
+					token: uni.getStorageSync('token'),
+				})
+				this.user_id = res.user_id
+				const res2 = await this.$api.share_jobpost({
+					post_id: this.post_id,
+					share_fromuserid: this.user_id,
+				})
+				this.$store.commit('post_id', '')
+				this.shareTitle = `${res2.job_post.jobs},进来自测匹配度`
+				console.log(this.shareTitle)
+				uni.setNavigationBarTitle({
+					title: this.shareTitle,
+				});
+				this.scene = `scene=${this.post_id}_${this.user_id}_yyy`
+			} else {
+				uni.setNavigationBarTitle({
+					title: '猎头导航让猎头做单更高效',
+				});
+			}
 		},
 		methods: {
+			async getData() {
+				const res = await this.$api.problem_list({
+					page: 1,
+					pagesize: 1000
+				})
+				this.wtList = res.list
+				this.wtTotal = res.total
+				this.wtList.forEach(() => {
+					if (this.voiceList.length < this.wtList.length) {
+						this.voiceList.push({
+							id: '',
+							src: '',
+							time: 0,
+						})
+					}
+				})
+			},
+			async getGWXQData() {
+				const res = await this.$api.position_view({
+					id: this.post_id,
+				})
+				this.objData = res.position_view
+				this.voiceList = res.position_view.understand_position
+			},
+			playAudio() {
+				console.log('123456')
+				clearInterval(this.timer2)
+				this.timer2 = null;
+				this.timer2 = setInterval(() => {
+					this.isDisplay = !this.isDisplay
+				}, 500)
+				innerAudioContext.src = this.voiceList[this.nowIndex].src;
+				innerAudioContext.play();
+				innerAudioContext.onEnded(() => {
+					clearInterval(this.timer2)
+					this.isDisplay = false;
+				})
+			},
+			beforeWt() {
+				if (this.nowIndex == 0) {
+					this.nowIndex = 0
+				} else {
+					this.nowIndex--
+				}
+			},
+			nextWt() {
+				if (this.nowIndex == this.wtTotal - 1) {
+					this.nowIndex = this.wtTotal - 1
+				} else {
+					this.nowIndex++
+				}
+			},
 			onSubmit(){
 				if(this.sele4_1_val == ''){
 					this.isOnsubmit = true
@@ -250,12 +339,6 @@
 			delAudio(){
 				this.voicePath = null;
 				this.time = 0
-			},
-			playAudio() {
-				if (this.voicePath) {
-					innerAudioContext.src = this.voicePath;
-					innerAudioContext.play();
-				}
 			},
 			toCity() {
 				uni.navigateTo({
@@ -380,15 +463,16 @@
 
 				.b-l {
 					width: 504rpx;
-					height: 86rpx;
+					// height: 86rpx;
 					background: #e5eeff;
 					border-radius: 16rpx;
 					font-size: 28rpx;
 					font-family: PingFangSC, PingFangSC-Medium;
 					font-weight: 500;
-					text-align: center;
+					// text-align: center;
+					padding: 28rpx 24rpx;
 					color: #000000;
-					line-height: 86rpx;
+					line-height: 34rpx;
 				}
 
 				.b-r {
@@ -422,6 +506,7 @@
 						}
 
 						.iconImg2 {
+							transition: all 0.5s;
 							margin-left: 12rpx;
 							width: 42rpx;
 							height: 42rpx;

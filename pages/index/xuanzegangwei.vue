@@ -1,11 +1,12 @@
 <template>
 	<view class="index">
-		<view class="top"></view>
+		<!-- <view class="top"></view>
 		<view class="nav1">
 			<u-icon @click='toBack' style='margin-right: 12rpx;' name="arrow-left" color="#000000" size="36"></u-icon>
 			<view @click='toBack' class="n1-txt">选择岗位</view>
-		</view>
-		<view style="margin-top: calc(176rpx + 0rpx);" class="nav2">
+		</view> -->
+		<u-navbar back-text="选择岗位" back-icon-size='36'></u-navbar>
+		<view style="margin-top: calc(0rpx);" class="nav2">
 			<view class="nav1-1">
 				<u-icon name="search" color="#BCBCBC" size="28"></u-icon>
 				<u-input v-model="keyword" type="text" placeholder='请输入岗位名称' />
@@ -16,7 +17,7 @@
 				<view v-for="(item,index) in tabbar" :key="index" class="u-tab-item"
 					:class="[current==index ? 'u-tab-item-active' : '',current==index+1&&current!=0?'i_jian1':'',current==index-1?'i_jia1':'']"
 					:data-current="index" @tap.stop="swichMenu(index)">
-					<text class="u-line-1">{{item.name}}</text>
+					<text class="u-line-1">{{item.title}}</text>
 					<view v-if="item.checkNum>0" class="numBox">{{item.checkNum}}</view>
 					<view class="after"></view>
 				</view>
@@ -24,14 +25,14 @@
 			<block v-for="(item,index) in tabbar" :key="index">
 				<scroll-view scroll-y class="right-box" v-if="current==index">
 					<view class="page-view">
-						<view class="class-item" v-for="(item,index) in tabbar" :key="index">
+						<view class="class-item" v-for="item2 in item.child" :key="item2.id">
 							<view class="item-title2">
-								<text>{{item.name}}</text>
+								<text>{{item2.title}}</text>
 							</view>
 							<view class="item-container">
-								<view class="thumb-box2" v-for="item1 in item.items" :key="item1">
-									<view @click="changeBox(item1)" :class="{'box-right':true,'blue':item1.checked}">
-										<view class="txt1">{{item1.name}}</view>
+								<view class="thumb-box2" v-for="item3 in item2.child" :key="item3.id">
+									<view @click="changeBox(item3)" :class="{'box-right':true,'blue':item3.checked}">
+										<view class="txt1">{{item3.title}}</view>
 									</view>
 								</view>
 							</view>
@@ -56,13 +57,27 @@
 					var i = 0;
 					this.chooseList = []
 					this.tabbar.forEach(ele => {
-						var arr = ele.items.filter(ele2 => {
+						ele.checkNum = 0
+						ele.child.forEach(ele3 => {
+							ele3.checkNum = ele3.child.filter(ele4 => {
+								console.log(this.idList, 'idList')
+								if (this.idList.indexOf(ele4.id.toString()) > -1) {
+									this.$set(ele4, 'checked', true)
+								}
+								if (ele4.checked) {
+									this.chooseList.push(ele4)
+								}
+								return ele4.checked
+							}).length
+							ele.checkNum += ele3.checkNum
+						})
+						var arr = ele.child.filter(ele2 => {
 							return ele2.checked
 						})
-						arr.forEach(arr_item=>{
-							this.chooseList.push(arr_item)
-						})
-						ele.checkNum = arr.length
+						// arr.forEach(arr_item => {
+						// 	this.chooseList.push(arr_item)
+						// })
+						// ele.checkNum = arr.length
 						// console.log(ele.checkNum)
 						i += ele.checkNum
 						if (i > 0) {
@@ -71,6 +86,8 @@
 							this.footer_show = false
 						}
 					})
+					this.idList = []
+					console.log(this.chooseList)
 				},
 				deep: true,
 				// immediate: true
@@ -80,7 +97,8 @@
 			return {
 				keyword: "",
 				footer_show: false,
-				chooseList:[],
+				chooseList: [],
+				idList:[],
 				// 
 				scrollTop: 0, //tab标题的滚动条位置
 				current: 0, // 预设当前项的值
@@ -236,23 +254,37 @@
 			}
 		},
 		onShow() {
-			this.tabbar.forEach(ele => {
-				ele.items.forEach(ele2 => {
-					this.$set(ele2, 'checked', false)
-				})
-			})
+			// this.tabbar.forEach(ele => {
+			// 	ele.items.forEach(ele2 => {
+			// 		this.$set(ele2, 'checked', false)
+			// 	})
+			// })
+			this.getData()
 		},
-		onLoad() {
-
+		onLoad(option) {
+			this.idList = option.idList.split(',')
+			console.log(this.idList)
 		},
 		methods: {
+			async getData() {
+				const res = await this.$api.jobcategory({
+					page: 1,
+					pagesize: 1000
+				})
+				res.list.forEach(ele => {
+					ele.child.forEach(ele2 => {
+						this.$set(ele2, 'checked', false)
+					})
+				})
+				this.tabbar = res.list
+			},
 			onSubmit() {
 				// console.log(this.chooseList)
 				let pages = getCurrentPages()
 				let prevPage = pages[pages.length - 2]
 				prevPage.$vm.getGangweiData(this.chooseList)
 				uni.navigateBack({
-					delta: 1 
+					delta: 1
 				})
 			},
 			quxiao() {
@@ -385,7 +417,7 @@
 		flex: 1;
 		display: flex;
 		overflow: hidden;
-		height: calc(100vh - 314rpx) !important;
+		height: calc(100vh - 248rpx - env(safe-area-inset-bottom) - env(safe-area-inset-bottom)) !important;
 	}
 
 	.u-search-inner {
@@ -482,7 +514,7 @@
 
 	.right-box {
 		width: 546rpx;
-		height: calc(100vh - 314rpx);
+		height: calc(100vh - 248rpx - env(safe-area-inset-bottom) - env(safe-area-inset-bottom));
 		border-radius: 16rpx;
 		background-color: #fff;
 	}

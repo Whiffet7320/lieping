@@ -1,12 +1,13 @@
 <template>
 	<view class="index">
-		<view class="top"></view>
+		<!-- <view class="top"></view>
 		<view class="nav1">
 			<u-icon @click='toBack' style='margin-right: 12rpx;' name="arrow-left" color="#000000" size="36"></u-icon>
 			<view @click='toBack' class="n1-txt">用户协议</view>
-		</view>
-		<view style="margin-top: calc(176rpx + 28rpx);" class="nav2">
-
+		</view> -->
+		<u-navbar back-text="用户协议" back-icon-size='36'></u-navbar>
+		<view style="margin-top: calc(28rpx);padding: 0 20rpx;" class="nav2">
+			<u-parse :html="user_agreement"></u-parse>
 		</view>
 	</view>
 </template>
@@ -15,16 +16,20 @@
 	export default {
 		data() {
 			return {
-
+				user_agreement:'',
 			}
 		},
 		onShow() {
-
+			this.getData()
 		},
 		onLoad() {
-
+		
 		},
 		methods: {
+			async getData(){
+				const res = await this.$api.user_agreement()
+				this.user_agreement = res.user_agreement
+			},
 			toBack() {
 				uni.navigateBack({
 					delta: 1

@@ -10,9 +10,15 @@
 				"navigationBarBackgroundColor": "#ffffff",
 				"navigationBarTextStyle": "black",
 				"navigationStyle": "custom"
+				// "disableScroll":true
 			}
 		},{
 			"path": "pages/tabBar/tuandui",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},{
+			"path": "pages/tabBar/login",
 			"style": {
 				"navigationStyle": "custom"
 			}
@@ -51,6 +57,11 @@
 			"style": {
 				"navigationStyle": "custom"
 			}
+		},{
+			"path": "pages/tabBar/saoma",
+			"style": {
+				"navigationStyle": "custom"
+			}
 		}
 	],
 	"subPackages": [{
@@ -81,6 +92,11 @@
 				"navigationStyle": "custom"
 			}
 		},{
+			"path": "xuanzefenlei2",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},{
 			"path": "jinzhan",
 			"style": {
 				"navigationStyle": "custom"
@@ -92,6 +108,11 @@
 			}
 		},{
 			"path": "tongji",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},{
+			"path": "yinpinXiangqin",
 			"style": {
 				"navigationStyle": "custom"
 			}
@@ -157,6 +178,11 @@
 			"style": {
 				"navigationStyle": "custom"
 			}
+		},{
+			"path": "ziliao",
+			"style": {
+				"navigationStyle": "custom"
+			}
 		}]
 	},
 	{
@@ -173,7 +199,7 @@
 	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "螃蟹商城",
+		"navigationBarTitleText": "猎头导航",
 		"navigationBarBackgroundColor": "#ffffff",
 		"backgroundColor": "#FFFFFF"
 	}

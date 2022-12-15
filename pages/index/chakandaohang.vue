@@ -1,24 +1,25 @@
 <template>
 	<view class="index">
-		<view class="top"></view>
+		<!-- <view class="top"></view>
 		<view class="nav1">
 			<u-icon @click='toBack' style='margin-right: 12rpx;' name="arrow-left" color="#000000" size="36"></u-icon>
 			<view @click='toBack' class="n1-txt">查看导航</view>
-		</view>
-		<view style="margin-top: calc(176rpx + 16rpx);" class="nav2">
+		</view> -->
+		<u-navbar back-text="查看导航" back-icon-size='36'></u-navbar>
+		<view style="margin-top: calc(16rpx);" class="nav2">
 			<view class="n2-tit1">行业背景</view>
 			<view class="n2-box">
 				<view class="n2b-tit1">行业分类<text class="red">*不限</text></view>
 				<view class="n2b-tit2">
-					<view class="l-txt1">大数据行业应用，大数据风控，大数据广告大数据广告大数据广告</view>
+					<view class="l-txt1">{{dataObj.industry_name}}</view>
 				</view>
-				<view style="margin-top: 44rpx;" class="n2b-tit1">细节行业</view>
-				<view class="n2b-tit2">
-					<view class="l-txt1">风控</view>
+				<view v-if="dataObj.is_industrysegmentation == 1" style="margin-top: 44rpx;" class="n2b-tit1">细节行业</view>
+				<view v-if="dataObj.is_industrysegmentation == 1" class="n2b-tit2">
+					<view class="l-txt1">{{dataObj.industrysegmentation_name}}</view>
 				</view>
 				<view style="margin-top: 44rpx;" class="n2b-tit1">行业关键词</view>
 				<view class="n2b-tit2">
-					<view class="l-txt1">石油</view>
+					<view class="l-txt1">{{dataObj.industry_keywords}}</view>
 				</view>
 			</view>
 		</view>
@@ -27,11 +28,11 @@
 			<view class="n2-box">
 				<view class="n2b-tit1">公司规模</view>
 				<view class="n2b-tit2">
-					<view class="l-txt1">1000人以上</view>
+					<view class="l-txt1">{{dataObj.company_size}}</view>
 				</view>
 				<view style="margin-top: 44rpx;" class="n2b-tit1">目标公司</view>
 				<view class="n2b-tit2">
-					<view class="l-txt1">蚂蚁金服有限公司</view>
+					<view class="l-txt1">{{dataObj.target_company}}</view>
 				</view>
 			</view>
 		</view>
@@ -40,27 +41,27 @@
 			<view class="n2-box">
 				<view class="n2b-tit1">岗位名称中专业方向关键词</view>
 				<view class="n2b-tit2">
-					<view class="l-txt1">财务</view>
+					<view class="l-txt1">{{dataObj.postname_keywords}}</view>
 				</view>
 				<view style="margin-top: 44rpx;" class="n2b-tit1">岗位职级</view>
 				<view class="n2b-tit2">
-					<view class="l-txt1">经理</view>
+					<view class="l-txt1">{{dataObj.jobtitle_keywords}}</view>
 				</view>
 				<view style="margin-top: 44rpx;" class="n2b-tit1">职责范围关键词</view>
 				<view class="n2b-tit2">
-					<view class="l-txt1">在总部主持大型会议</view>
+					<view class="l-txt1">{{dataObj.scope1_keywords}}</view>
 				</view>
 				<view style="margin-top: 44rpx;" class="n2b-tit1">职责范围关键词</view>
 				<view class="n2b-tit2">
-					<view class="l-txt1">在东南亚地区销售</view>
+					<view class="l-txt1">{{dataObj.scope2_keywords}}</view>
 				</view>
 				<view style="margin-top: 44rpx;" class="n2b-tit1">职责范围关键词</view>
 				<view class="n2b-tit2">
-					<view class="l-txt1">熟练销售模式</view>
+					<view class="l-txt1">{{dataObj.scope3_keywords}}</view>
 				</view>
 				<view style="margin-top: 44rpx;" class="n2b-tit1">岗位分类</view>
 				<view class="n2b-tit2">
-					<view class="l-txt1">销售</view>
+					<view class="l-txt1">{{dataObj.position_classification}}</view>
 				</view>
 			</view>
 		</view>
@@ -71,36 +72,36 @@
 			<view class="n2-box">
 				<view class="n2b-tit1">第一学历</view>
 				<view class="n2b-tit2">
-					<view class="l-txt1">本科</view>
+					<view class="l-txt1">{{dataObj.first_degree}}</view>
 				</view>
 				<view style="margin-top: 44rpx;" class="n2b-tit1">硕博要求</view>
 				<view class="n2b-tit2">
-					<view class="l-txt1">博士</view>
+					<view class="l-txt1">{{dataObj.shuobo_requirements}}</view>
 				</view>
 				<view style="margin-top: 44rpx;" class="n2b-tit1">学科专业</view>
 				<view class="n2b-tit2">
-					<view class="l-txt1">金融管理</view>
+					<view class="l-txt1">{{dataObj.discipline}}</view>
 				</view>
 				<view style="margin-top: 44rpx;" class="n2b-tit1">外语</view>
 				<view class="n2b-tit2">
-					<view class="l-txt1">英语</view>
+					<view class="l-txt1">{{dataObj.foreignlanguage_name}}</view>
 				</view>
 				<view style="margin-top: 44rpx;" class="n2b-tit1">熟练程度</view>
 				<view class="n2b-tit2">
-					<view class="l-txt1">读写熟练</view>
+					<view class="l-txt1">{{dataObj.proficiency}}</view>
 				</view>
 				<view style="margin-top: 44rpx;" class="n2b-tit1">必备技能</view>
 				<view class="n2b-tit2">
-					<view class="l-txt1">英语等级四级</view>
+					<view class="l-txt1">{{dataObj.essentialskills_keywords}}</view>
 				</view>
 				<view style="margin-top: 44rpx;" class="n2b-tit1">年龄</view>
 				<view class="n2b-tit2">
-					<view class="l-txt1">23-27岁</view>
+					<view class="l-txt1">{{dataObj.min_age}}-{{dataObj.max_age}}岁</view>
 				</view>
 				<view style="margin-top: 44rpx;" class="n2b-tit1">薪酬</view>
 				<view class="n2b-tit2">
-					<view style="width: 350rpx;" class="l-txt1">3k-4k*13薪</view>
-					<view class="l-txt2">*年薪：39k-52k</view>
+					<view style="width: 350rpx;" class="l-txt1">{{dataObj.salary_range}}</view>
+					<view class="l-txt2">*年薪：{{dataObj.years_salaries}}万</view>
 				</view>
 			</view>
 		</view>
@@ -207,6 +208,8 @@
 				sele2_1_val: '',
 				hangyeValue:"",
 				hangyeList:[],
+				dataObj:{},
+				post_id:"",
 			}
 		},
 		onShow() {
@@ -223,10 +226,17 @@
 				})
 			}
 		},
-		onLoad() {
-
+		onLoad(option) {
+			this.post_id = option.post_id;
+			this.getData()
 		},
 		methods: {
+			async getData(){
+				const res = await this.$api.postnavigation_view({
+					post_id:this.post_id
+				})
+				this.dataObj = res.postnavigation
+			},
 			clickZk(i) {
 				this.pop1Show = true;
 			},

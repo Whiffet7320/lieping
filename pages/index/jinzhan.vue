@@ -1,17 +1,18 @@
 <template>
 	<view class="index">
-		<view class="top"></view>
+		<!-- <view class="top"></view>
 		<view class="nav1">
 			<u-icon @click='toBack' style='margin-right: 12rpx;' name="arrow-left" color="#000000" size="36"></u-icon>
 			<view @click='toBack' class="n1-txt">进展</view>
-		</view>
-		<view @click="popover = true" class="float-img2">
+		</view> -->
+		<u-navbar @touchmove="closeMask" @touchstart="closeMask" back-text="进展" back-icon-size='36'></u-navbar>
+		<view @click="popover = true;nowIndex=1" class="float-img2">
 			<view class="fi2-txt">{{pop_title}}</view>
 			<u-icon style='transform: rotate(90deg);' name="play-right-fill" color="#fffbfb" size="14"></u-icon>
 		</view>
-		<popover class="popov" @select='changePop' :btnList='popoverList' :modalLeftPos='"-20rpx"' :modalTopPos='"-10rpx"'
+		<popover v-if="nowIndex != -1" ref='pop' class="popov" @select='changePop' :btnList='popoverList' :modalLeftPos='"-20rpx"' :modalTopPos='"-10rpx"'
 			:modalOpacity='"1"' :active="popover"></popover>
-		<view style="margin-top: calc(176rpx + 32rpx);" class="nav2">
+		<view @touchmove="closeMask" @touchstart="closeMask" style="margin-top: calc(32rpx);" class="nav2">
 			<view class="table">
 				<view class="n2t-n1">
 					<view class="left">成员</view>
@@ -29,20 +30,22 @@
 					<view class="right">转发应聘</view>
 				</view>
 				<view class="n2t-n2" :style="{borderBottom:item.id == list[list.length-1].id?'0':''}" v-for="(item,i) in list" :key='item.id'>
-					<view class="x1">刘树昌</view>
+					<view class="x1">{{item.realname}}</view>
 					<view class="x2">
-						<view :style="{borderTop:i == 0?'0':''}" class="x2-1">18</view>
-						<view :style="{borderTop:i == 0?'0':''}" class="x2-2">16</view>
+						<view :style="{borderTop:i == 0?'0':''}" class="x2-1">{{item.chattable_num}}</view>
+						<view :style="{borderTop:i == 0?'0':''}" class="x2-2">{{item.pending_num}}</view>
 					</view>
-					<view class="x3">8</view>
+					<view class="x3">{{item.share_num}}</view>
 				</view>
 			</view>
 		</view>
+		<!-- <u-loadmore @touchmove="closeMask" @touchstart="closeMask" :class="{'myloadmore':true}" :status="status"
+			:icon-type="iconType" :load-text="loadText" /> -->
 	</view>
 </template>
 
 <script>
-	import popover from '../../components/dean-popover/dean-popover.vue'
+	import popover from '../../components/dean-popover/dean-popover2.vue'
 	export default {
 		components: {
 			popover
@@ -50,32 +53,116 @@
 		data() {
 			return {
 				list:[],
-				popoverList:['今天','本周','上周','累计'],
+				popoverList:['昨天','今天','本周','上周','累计'],
 				popover:false,
-				pop_title:'今天',
+				pop_title:'昨天',
+				maskshow:false,
+				post_id:"",
+				dingdanPage:0,
+				begin_day:"",
+				end_day:"",
+				nowIndex:-1,
+				// 加载
+				status: 'loadmore',
+				iconType: 'flower',
+				loadText: {
+					loadmore: '上拉加载更多',
+					loading: '正在加载...',
+					nomore: '没有更多了'
+				},
 			}
 		},
 		onShow() {
-			for(let i = 0;i<50;i++){
-				this.list.push({
-					val:`name${i}`,
-					id:i
-				})
-			}
+			this.list = []
+			this.dingdanPage = 1
+			var day = new Date();
+			this.begin_day = new Date(new Date().setDate(new Date().getDate() - 1)).format('yyyy-MM-dd');
+			this.end_day = new Date(new Date().setDate(new Date().getDate() - 1)).format('yyyy-MM-dd');
+			this.getData()
 		},
-		onLoad() {
-
+		onReachBottom() {
+			this.dingdanPage++
+			this.getData()
+		},
+		onLoad(option) {
+			this.post_id = option.post_id;
 		},
 		methods: {
+			async getData(){
+				this.status = 'loading';
+				const res = await this.$api.compost_progresslist({
+					post_id:this.post_id,
+					page: this.dingdanPage,
+					pagesize: 30,
+					begin_day:this.begin_day,
+					end_day:this.end_day,
+				})
+				if (res.list.length < 30) {
+					this.status = 'nomore'
+				} else {
+					this.status = 'loadmore';
+				}
+				this.list = this.list.concat(res.list)
+			},
 			changePop(e) {
-				console.log(e)
-				this.pop_title = e
+				console.log(e.isclose)
+				if(e.isclose){
+					this.nowIndex = -1
+					this.popover = false
+					this.isShowPop = false
+					return
+				}
+				this.pop_title = e.val
+				if (e.val == '今天') {
+					this.timeRadio = 2
+				}else if (e.val == '本周') {
+					this.timeRadio = 3
+				}else if (e.val == '上周') {
+					this.timeRadio = 4
+				}else if (e.val == '累计') {
+					this.timeRadio = 1
+				}else if (e.val == '昨天') {
+					this.timeRadio = 5
+				}
+				this.changeTimeRadio()
 				this.popover = false
+				this.isShowPop = false
+				this.nowIndex = -1
+			},
+			changeTimeRadio() {
+				var day = new Date();
+				var weekday = new Date().getDay() || 7;
+				if (this.timeRadio == 1) {
+					this.begin_day = ''
+					this.end_day = ''
+				} else if (this.timeRadio == 2) {
+					this.begin_day = day.format('yyyy-MM-dd')
+					this.end_day = day.format('yyyy-MM-dd')
+				} else if (this.timeRadio == 3) {
+					this.begin_day = new Date(new Date().setDate(new Date().getDate() - weekday + 1)).format('yyyy-MM-dd');
+					this.end_day = new Date(new Date().setDate(new Date().getDate() - weekday + 7)).format('yyyy-MM-dd')
+				} else if (this.timeRadio == 4) {
+					this.begin_day = new Date(new Date().setDate(new Date().getDate() - weekday - 6)).format('yyyy-MM-dd');
+					this.end_day = new Date(new Date().setDate(new Date().getDate() - weekday)).format('yyyy-MM-dd')
+				} else if (this.timeRadio == 5) {
+					this.begin_day = new Date(new Date().setDate(new Date().getDate() - 1)).format('yyyy-MM-dd');
+					this.end_day = new Date(new Date().setDate(new Date().getDate() - 1)).format('yyyy-MM-dd');
+				}
+				this.list = []
+				this.dingdanPage = 1
+				this.getData()
 			},
 			toBack() {
 				uni.navigateBack({
 					delta: 1
 				})
+			},
+			closeMask() {
+				this.maskshow = false;
+				console.log(this.$refs.pop,this.$refs.pop1,this.$refs.pop2)
+				this.$refs.pop ? this.$refs.pop.closeBtn(this.pop_title,'') : '';
+				// this.$refs.pop2 ? this.$refs.pop2.closeBtn('',this.pop_title2) : '';
+				// this.$refs.pop3 ? this.$refs.pop3.closeBtn(this.pop_title,this.pop_title2) : '';
 			},
 		}
 	}
@@ -215,7 +302,7 @@
 				}
 
 				.right {
-					width: 33%;
+					width: 34%;
 					text-align: center;
 					line-height: 120rpx;
 					color: #fff;
@@ -224,13 +311,25 @@
 			}
 
 			.n2t-n2 {
+				&:nth-last-child(1){
+					.x2-1{
+						border-bottom: 0rpx !important;
+					}
+					.x2-2{
+						border-bottom: 0rpx !important;
+					}
+				}
 				display: flex;
-				height: 70rpx;
+				// height: 70rpx;
+				min-height: 70rpx;
 				color: #121212;
 				border-bottom: 2rpx solid #1362fd;
 				.x1 {
 					width: 33%;
-					line-height: 70rpx;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					// line-height: 70rpx;
 					text-align: center;
 					font-size: 26rpx;
 					font-family: PingFangSC, PingFangSC-Regular;
@@ -242,17 +341,28 @@
 					align-items: center;
 					width: 33%;
 					.x2-1{
+						height: 100%;
 						width: 50%;
+						display: flex;
+						align-items: center;
+						justify-content: center;
 						text-align: center;
-						line-height: 70rpx;
-						border: 2rpx solid #1362fd;
+						// line-height: 70rpx;
+						border-right: 2rpx solid #1362fd;
+						border-left: 2rpx solid #1362fd;
+						border-bottom: 2rpx solid #1362fd;
+						border-top: 2rpx solid #1362fd;
 						font-size: 26rpx;
 						background: #8bb0fb;
 					}
 					.x2-2{
+						height: 100%;
 						width: 50%;
+						display: flex;
+						align-items: center;
+						justify-content: center;
 						text-align: center;
-						line-height: 70rpx;
+						// line-height: 70rpx;
 						border-right: 2rpx solid #1362fd;
 						font-size: 26rpx;
 						border-bottom: 2rpx solid #1362fd;
@@ -262,8 +372,11 @@
 				}
 				.x3 {
 					width: 33%;
-					line-height: 70rpx;
+					// line-height: 70rpx;
 					text-align: center;
+					display: flex;
+					align-items: center;
+					justify-content: center;
 					font-size: 26rpx;
 					font-family: PingFangSC, PingFangSC-Regular;
 					font-weight: 400;
@@ -272,4 +385,6 @@
 			}
 		}
 	}
+
+
 </style>

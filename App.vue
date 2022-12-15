@@ -13,6 +13,7 @@
 			// oScript.type = "text/javascript";
 			// oScript.src = "https://cdn.bootcdn.net/ajax/libs/jquery/3.6.1/jquery.js";
 			// document.body.appendChild(oScript);
+			
 		},
 		// onLaunch(option) {
 		// 	if (option.query.hasOwnProperty('scene')) {
@@ -70,7 +71,41 @@
 
 <style lang="scss">
 	@import "uview-ui/index.scss";
-
+	/deep/.myTabber {
+		background: #f8faff !important;
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		width: 100vw;
+		z-index: 99;
+	}
+	/deep/ .u-navbar{
+		background: #f8faff !important;
+		.u-icon__icon{
+			margin-left: 8rpx !important;
+			font-weight: 600 !important;
+			color: #000 !important;
+		}
+		.u-back-text{
+			font-size: 36rpx !important;
+			margin-left: 8rpx !important;
+			font-weight: 600 !important;
+			color: #000 !important;
+		}
+	}
+	/deep/ .u-load-more-wrap{
+		height: 140rpx !important;
+		// .u-line-1{
+		// 	color: #5DA5DB !important;
+		// }
+	}
+	/deep/ .u-border-bottom:after {
+	    border-bottom-width: 0px !important;
+	}
+	/deep/ .u-badge {
+		    top: -2rpx !important;
+		    right: 0px !important;
+	}
 	page {
 		font-family: PingFang SC;
 	}

@@ -7,24 +7,20 @@
 
 			<view class="modal" :style="{ 
 					top: modalTopPos,
-					left: modalLeftPos,
 					opacity: show?'1' : '0',
-					'z-index': show?'99999' : '-10',
-					height:isFabu?'352rpx':'280rpx'
+					'z-index': show?'99999' : '-10'
 				}">
 				<!-- <view class="modal-ang" v-if="dotShow && btnList.length > 0" :style="direction !== 'left' ? 'left: 10px': 'right: 10px'"></view>
 				<view class="modal-item" v-for="(item, index) in btnList" :index="index" :key="index" @tap="callRes(item)">
 					{{item}}
 				</view> -->
-				<image @click="closeBtn" class="float-img" src="/static/newImage/tabBar/zu11.png" mode="">
-				</image>
-				<view v-if="isshow" @tap.stop="callRes('发布到求职端')" :class="{'m-tit1':isFabu,'no':!isFabu}">发布到求职端</view>
-				<button @tap.stop="callRes('转发')" open-type="share" v-if="isFabu" :class="{'m-tit2':isFabu,'non':!isFabu}">转发</button>
-				<view @tap.stop="callRes('应聘')" class="m-tit3">
-					<view v-if="num != '0'" class="red"></view>
-					<view class="txx">应聘<text class="span">({{num}})</text></view>
-				</view>
-				<view @tap.stop="callRes('下架')" class="m-tit4">下架</view>
+				<!-- <u-icon :style='{position: "absolute",top: "-50rpx",right:leftNum}' name="arrow-upward" color="#fff" size="40"></u-icon>
+				<view class="flex">
+					<view class="left">点击这里可以进行分享哦！</view>
+					<view class="shu"></view>
+					<view @click="callRes" class="right">好的</view>
+				</view> -->
+				<image @click="callRes" style="width: 710rpx;height: 264rpx;margin-left: 20rpx;margin-top: -30rpx;" src="/static/newImage/tabBar/bz18.png" mode=""></image>
 			</view>
 		</view>
 	</view>
@@ -55,8 +51,9 @@
 					scollTop: '',
 					val: "",
 				},
-				shareTitle:'',
-				user_id:"",
+				shareTitle: '',
+				user_id: "",
+				leftNum:''
 			};
 		},
 		watch: {
@@ -84,6 +81,11 @@
 				title: title || '',
 				path: `/pages/qzz/zhiweixiangqin?scene=${this.post_ids}_${this.user_id}`,
 			}
+		},
+		created() {
+			const res = uni.getMenuButtonBoundingClientRect()
+			this.leftNum = `calc(100vw - ${res.left}px - ${(res.width / 4 * 1)}px - 17rpx - 2px)`
+			console.log(this.leftNum)
 		},
 		props: {
 			btnList: {
@@ -134,31 +136,14 @@
 				type: String,
 				default: '0'
 			},
-			post_ids:{
+			post_ids: {
 				type: String,
 				default: ''
 			},
 		},
 		methods: {
-			async callRes(val) {
-				// if (val == '转发') {
-				// 	if(!this.isFabu){
-				// 		return
-				// 	}
-				// 	const res = await this.$api.tokentouserid({
-				// 		token: uni.getStorageSync('token'),
-				// 	})
-				// 	this.user_id = res.user_id
-				// 	const res2 = await this.$api.share_jobpost({
-				// 		post_ids: this.post_ids,
-				// 		share_fromuserid: this.user_id
-				// 	})
-				// 	this.shareTitle = `职位-${res2.job_post.jobs}-${res2.job_post.salary_range}`
-				// 	this.$emit('select2', this.shareTitle);
-				// }
-				this.emitObj.val = val
-				this.$emit('select', this.emitObj);
-				this.emitObj.val = ''
+			async callRes() {
+				this.$emit('select', '');
 			},
 			closeBtn() {
 				this.show = false
@@ -184,113 +169,54 @@
 	};
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
+	/deep/ .uicon-arrow-upward{
+		position: absolute !important;
+		right: 20rpx !important;
+		top: 0 !important;
+	}
 	.compos {
 		position: relative;
 		height: 0;
 		z-index: 19999;
+
 		.modal {
-			background-color: #f8faff;
 			position: absolute;
 			border-radius: 1vw;
 			transition: opacity ease-out 300ms;
 			z-index: 999;
-			box-shadow: 0rpx 4rpx 8rpx 0rpx rgba(0, 0, 0, 0.11);
-			width: calc(244rpx);
-			height: 352rpx;
-			padding: 0 32rpx;
-			background: #f8faff;
-			border-radius: 10rpx;
-			box-shadow: 0rpx 6rpx 8rpx 0rpx rgba(0, 0, 0, 0.15);
-
-			.float-img {
-				width: 40rpx;
-				height: 40rpx;
-				position: absolute;
-				right: 16rpx;
-				top: 16rpx;
-			}
-
-			.m-tit1 {
-				height: 70rpx;
-				font-size: 28rpx;
-				font-family: PingFangSC, PingFangSC-Regular;
-				font-weight: 400;
-				text-align: center;
-				color: #b4b4b4;
-				margin-top: 50rpx;
-				line-height: 70rpx;
-				border-bottom: 2rpx solid #efefef;
-			}
-
-			.no {
-				height: 70rpx;
-				font-size: 28rpx;
-				font-family: PingFangSC, PingFangSC-Regular;
-				font-weight: 400;
-				text-align: center;
-				margin-top: 50rpx;
-				line-height: 70rpx;
-				border-bottom: 2rpx solid #efefef;
-				color: #121212;
-			}
-			.non{
-				height: 70rpx;
-				font-size: 28rpx;
-				font-family: PingFangSC, PingFangSC-Regular;
-				font-weight: 400;
-				text-align: center;
-				line-height: 70rpx;
-				border-bottom: 2rpx solid #efefef;
-				color: #b4b4b4;
-			}
-
-			.m-tit2 {
-				height: 70rpx;
-				font-size: 28rpx;
-				font-family: PingFangSC, PingFangSC-Regular;
-				font-weight: 400;
-				text-align: center;
-				color: #121212;
-				line-height: 70rpx;
-				border-bottom: 2rpx solid #efefef;
-			}
-
-			.m-tit3 {
-				height: 70rpx;
+			width: 100vw;
+			.flex{
+				margin-left: 22rpx;
+				width: 710rpx;
+				height: 110rpx;
+				background: #ffffff;
+				border: 2rpx solid #1262fd;
+				border-radius: 12rpx;
 				display: flex;
 				align-items: center;
-				justify-content: center;
-				border-bottom: 2rpx solid #efefef;
-
-				.red {
-					width: 14rpx;
-					height: 14rpx;
-					background: #ff5c50;
-					border-radius: 50%;
-					margin-right: 12rpx;
-				}
-
-				.txx {
-					font-size: 28rpx;
-					font-family: PingFangSC, PingFangSC-Regular;
-					font-weight: 400;
-					color: #121212;
-
-					.span {
-						margin-left: 6rpx;
-					}
-				}
 			}
-
-			.m-tit4 {
-				height: 70rpx;
-				font-size: 28rpx;
+			.left {
+				font-size: 32rpx;
 				font-family: PingFangSC, PingFangSC-Regular;
 				font-weight: 400;
+				color: #000000;
+				width: 588rpx;
 				text-align: center;
-				color: #121212;
-				line-height: 70rpx;
+			}
+
+			.shu {
+				width: 2rpx;
+				height: 76rpx;
+				background: #f2f2f2;
+			}
+
+			.right {
+				margin-left: 32rpx;
+				font-size: 32rpx;
+				font-family: PingFangSC, PingFangSC-Regular;
+				font-weight: 400;
+				color: #000000;
 			}
 		}
 	}

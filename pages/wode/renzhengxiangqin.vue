@@ -1,92 +1,100 @@
 <template>
 	<view class="index">
-		<view class="top"></view>
+		<!-- <view class="top"></view>
 		<view class="nav1">
-			<u-icon style='margin-right: 12rpx;' name="arrow-left" color="#000000" size="36"></u-icon>
-			<view class="n1-txt">认证猎企详情</view>
-		</view>
+			<u-icon @click='toBack' style='margin-right: 12rpx;' name="arrow-left" color="#000000" size="36"></u-icon>
+			<view @click='toBack' class="n1-txt">认证猎企详情</view>
+		</view> -->
+		<u-navbar back-text="认证猎企详情" back-icon-size='36'></u-navbar>
 		<!-- 审核中 -->
-		<template v-if="false">
-			<view style="margin-top: calc(176rpx + 20rpx);" class="nav2">
+		<template v-if="status == 1">
+			<view style="margin-top: calc(20rpx);" class="nav2">
 				<image class="float-img" src="/static/newImage/wode/bianzu6.png" mode=""></image>
 				<view class="title1">基本信息</view>
 				<view class="tit1">公司名称</view>
-				<view class="tit2">天宇传媒有限公司</view>
+				<view class="tit2">{{dataObj.com_name}}</view>
 				<view style="margin-top: 44rpx;" class="tit1">姓名</view>
-				<view class="tit2">张三</view>
+				<view class="tit2">{{dataObj.realname}}</view>
+				<view style="margin-top: 44rpx;" class="tit1">手机号</view>
+				<view class="tit2">{{dataObj.mobile}}</view>
 				<view style="margin-top: 44rpx;" class="tit1">职务</view>
-				<view class="tit2">销售经理</view>
+				<view class="tit2">{{dataObj.jobs}}</view>
 			</view>
 			<view style="margin-top: calc(32rpx);" class="nav2">
 				<view class="title1">证件信息</view>
 				<view style="margin-bottom: 20rpx;" class="tit1">营业执照</view>
 				<view class="imgs">
-					<image v-for="(item,i) in yyzzImg" :key='i' @click="seeImg(i)" class="imgg" :src="item" mode="">
+					<image v-for="(item,i) in dataObj.license_pics" :key='i' @click="seeImg(i)" class="imgg" :src="item" mode="">
 					</image>
 				</view>
 				<view style="margin-top: 44rpx;margin-bottom: 20rpx;" class="tit1">人力资源许可证</view>
 				<view class="imgs">
-					<image v-for="(item,i) in xkzImg" :key='i' @click="seeImg(i)" class="imgg" :src="item" mode="">
+					<image v-for="(item,i) in dataObj.servicelicense_pics" :key='i' @click="seeImg2(i)" class="imgg" :src="item" mode="">
 					</image>
 				</view>
 			</view>
 		</template>
 		<!-- 已通过 -->
-		<template v-if="false">
-			<view style="margin-top: calc(176rpx + 20rpx);" class="nav2">
+		<template v-if="status == 2">
+			<view style="margin-top: calc(20rpx);" class="nav2">
 				<image class="float-img" src="/static/newImage/wode/bianzu6success.png" mode=""></image>
 				<view class="title1">基本信息</view>
 				<view class="tit1">公司名称</view>
-				<view class="tit2">天宇传媒有限公司</view>
+				<view class="tit2">{{dataObj.com_name}}</view>
 				<view style="margin-top: 44rpx;" class="tit1">姓名</view>
-				<view class="tit2">张三</view>
+				<view class="tit2">{{dataObj.realname}}</view>
+				<view style="margin-top: 44rpx;" class="tit1">手机号</view>
+				<view class="tit2">{{dataObj.mobile}}</view>
 				<view style="margin-top: 44rpx;" class="tit1">职务</view>
-				<view class="tit2">销售经理</view>
+				<view class="tit2">{{dataObj.jobs}}</view>
 			</view>
 			<view style="margin-top: calc(32rpx);" class="nav2">
 				<view class="title1">证件信息</view>
 				<view style="margin-bottom: 20rpx;" class="tit1">营业执照</view>
 				<view class="imgs">
-					<image v-for="(item,i) in yyzzImg" :key='i' @click="seeImg(i)" class="imgg" :src="item" mode="">
+					<image v-for="(item,i) in dataObj.license_pics" :key='i' @click="seeImg(i)" class="imgg" :src="item" mode="">
 					</image>
 				</view>
 				<view style="margin-top: 44rpx;margin-bottom: 20rpx;" class="tit1">人力资源许可证</view>
 				<view class="imgs">
-					<image v-for="(item,i) in xkzImg" :key='i' @click="seeImg(i)" class="imgg" :src="item" mode="">
+					<image v-for="(item,i) in dataObj.servicelicense_pics" :key='i' @click="seeImg2(i)" class="imgg" :src="item" mode="">
 					</image>
 				</view>
 			</view>
 		</template>
 		<!-- 未通过 -->
-		<template v-if="true">
-			<view style="margin-top: calc(176rpx + 20rpx);" class="nav2">
+		<template v-if="status == 3">
+			<view style="margin-top: calc(20rpx);" class="nav2">
 				<view class="title1">基本信息</view>
 				<view class="tit1">公司名称</view>
-				<view class="tit2">天宇传媒有限公司</view>
+				<view class="tit2">{{dataObj.com_name}}</view>
 				<view style="margin-top: 44rpx;" class="tit1">姓名</view>
-				<view class="tit2">张三</view>
+				<view class="tit2">{{dataObj.realname}}</view>
+				<view style="margin-top: 44rpx;" class="tit1">手机号</view>
+				<view class="tit2">{{dataObj.mobile}}</view>
 				<view style="margin-top: 44rpx;" class="tit1">职务</view>
-				<view class="tit2">销售经理</view>
+				<view class="tit2">{{dataObj.jobs}}</view>
 			</view>
 			<view style="margin-top: calc(32rpx);" class="nav2">
 				<view class="title1">证件信息</view>
 				<view style="margin-bottom: 20rpx;" class="tit1">营业执照</view>
 				<view class="imgs">
-					<image v-for="(item,i) in yyzzImg" :key='i' @click="seeImg(i)" class="imgg" :src="item" mode="">
+					<image v-for="(item,i) in dataObj.license_pics" :key='i' @click="seeImg(i)" class="imgg" :src="item" mode="">
 					</image>
 				</view>
 				<view style="margin-top: 44rpx;margin-bottom: 20rpx;" class="tit1">人力资源许可证</view>
 				<view class="imgs">
-					<image v-for="(item,i) in xkzImg" :key='i' @click="seeImg(i)" class="imgg" :src="item" mode="">
+					<image v-for="(item,i) in dataObj.servicelicense_pics" :key='i' @click="seeImg2(i)" class="imgg" :src="item" mode="">
 					</image>
 				</view>
 			</view>
 			<view class="nav3">
 				<u-icon name="info-circle" color="#EB2F2F" size="36"></u-icon>
-				<view class="txxx">认证未通过原因：人力资源许可证已过期</view>
+				<view class="txxx">认证未通过原因：{{reason}}</view>
 			</view>
+			<view style="height: 236rpx;"></view>
 			<view class="footer">
-				<view class="btn">重新创建</view>
+				<view class="btn" @click="onSubmit">重新提交</view>
 			</view>
 		</template>
 
@@ -97,24 +105,54 @@
 	export default {
 		data() {
 			return {
-				yyzzImg: ['https://img0.baidu.com/it/u=2891730385,3470273053&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=625',
-					'https://img1.baidu.com/it/u=1428986297,3289334505&fm=253&fmt=auto&app=120&f=JPEG?w=800&h=1422'
-				],
-				xkzImg: ['https://img1.baidu.com/it/u=1428986297,3289334505&fm=253&fmt=auto&app=120&f=JPEG?w=800&h=1422',
-					'https://img0.baidu.com/it/u=2891730385,3470273053&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=625'
-				]
+				status:'',
+				dataObj:{},
+				id:'',
+				reason:'',
+				historic_records:null,
 			}
 		},
 		onShow() {
-
+			
 		},
-		onLoad() {
-
+		onLoad(option) {
+			console.log(option)
+			if(option.history){
+				this.historic_records = JSON.parse(option.history) 
+			}
+			this.status = option.status
+			this.id = option.id;
+			this.reason = option.reason
+			if(!this.historic_records){
+				this.getData()
+			}else{
+				this.status = this.historic_records.is_licenseexamine
+				this.dataObj = this.historic_records
+				this.dataObj.license_pics = this.dataObj.license_pics.split(',')
+				this.dataObj.servicelicense_pics = this.dataObj.servicelicense_pics.split(',')
+			}
 		},
 		methods: {
+			async getData(){
+				const res = await this.$api.authentication_enterpriseview()
+				this.status = res.is_licenseexamine
+				this.dataObj = res
+				this.dataObj.license_pics = this.dataObj.license_pics.split(',')
+				this.dataObj.servicelicense_pics = this.dataObj.servicelicense_pics.split(',')
+			},
+			onSubmit(){
+				uni.redirectTo({
+					url:'/pages/wode/renzheng'
+				})
+			},
+			toBack(){
+				uni.navigateBack({
+					delta:1
+				})
+			},
 			seeImg(i) {
 				uni.previewImage({
-					urls: this.yyzzImg,
+					urls: this.dataObj.license_pics,
 					current:i,
 					// longPressActions: {
 					// 	itemList: ['发送给朋友', '保存图片', '收藏'],
@@ -125,6 +163,12 @@
 					// 		console.log(err.errMsg);
 					// 	}
 					// }
+				});
+			},
+			seeImg2(i) {
+				uni.previewImage({
+					urls: this.dataObj.servicelicense_pics,
+					current:i,
 				});
 			},
 		}
@@ -234,7 +278,7 @@
 		height: 86rpx;
 		background: #ffdcd6;
 		border-radius: 20rpx;
-		margin: 34rpx auto 250rpx auto;
+		margin: 34rpx auto 0rpx auto;
 		padding: 26rpx;
 		
 		.txxx {

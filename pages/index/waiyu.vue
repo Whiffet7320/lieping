@@ -2,12 +2,12 @@
 	<view class="index">
 		<view class="top"></view>
 		<view class="nav1">
-			<u-icon style='margin-right: 12rpx;' name="arrow-left" color="#000000" size="36"></u-icon>
-			<view class="n1-txt">选择语言</view>
+			<u-icon @click="toBack" style='margin-right: 12rpx;' name="arrow-left" color="#000000" size="36"></u-icon>
+			<view @click="toBack" class="n1-txt">选择语言</view>
 		</view>
 		<view style="margin-top: calc(176rpx + 20rpx);margin-left: 20rpx;" class="nav2">
-			<view class="item" @click="toBack" v-for="item in 30">
-				<view class="txt">英语</view>
+			<view class="item" @click="onSubmit(item)" v-for="item in list" :key='item.id'>
+				<view class="txt">{{item.title}}</view>
 				<view class="heng"></view>
 			</view>
 		</view>
@@ -18,19 +18,34 @@
 	export default{
 		data(){
 			return{
-				
+				list:[]
 			}
 		},
 		onShow() {
-			
+			this.getData()
 		},
 		onLoad() {
 			
 		},
 		methods:{
+			async getData(){
+				const res = await this.$api.foreignlanguage({
+					page:1,
+					pagesize:1000,
+				})
+				this.list = res.list
+			},
 			toBack(){
 				uni.navigateBack({
-					delta:1
+					delta: 1
+				})
+			},
+			onSubmit(item){
+				let pages = getCurrentPages()
+				let prevPage = pages[pages.length - 2]
+				prevPage.$vm.getWaiyuData(item)
+				uni.navigateBack({
+					delta: 1
 				})
 			},
 		}
@@ -92,7 +107,7 @@
 			.heng{
 				margin-top: 18rpx;
 				width: 648rpx;
-				height: 4rpx;
+				height: 1.6rpx;
 				background: #ececec;
 			}
 		}
