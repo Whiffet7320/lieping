@@ -246,9 +246,6 @@
 								最小
 							</view>
 							<view v-else :class="{'txt':true}">{{sele5_1_val}}</view>
-							<!-- <view :class="{'txt':true,'gray':sele5_1_val == ''}">
-									{{sele5_1_val == '' ? '最小' : sele5_1_val}}</view>
-							</view> -->
 						</view>
 						<u-select @confirm="confirm5_1" :default-value="def5_1" v-model="seleShow5_1" :list="sele5_1"></u-select>
 						<view class="hengg"></view>
@@ -409,131 +406,7 @@
 				],
 				sele2_1_val: '',
 				seleShow4_4: false,
-				sele4_4: [
-					[{
-							value: '1',
-							label: '2K'
-						},
-						{
-							value: '2',
-							label: '3K'
-						},
-						{
-							value: '2',
-							label: '4K'
-						},
-						{
-							value: '2',
-							label: '5K'
-						},
-						{
-							value: '2',
-							label: '6K'
-						},
-						{
-							value: '2',
-							label: '7K'
-						},
-						{
-							value: '2',
-							label: '8K'
-						},
-						{
-							value: '2',
-							label: '9K'
-						},
-						{
-							value: '2',
-							label: '10K'
-						},
-						{
-							value: '2',
-							label: '11K'
-						},
-						{
-							value: '2',
-							label: '12K'
-						}
-					],
-					[{
-						value: '1',
-						label: '~'
-					}],
-					[{
-							value: '1',
-							label: '2K'
-						},
-						{
-							value: '2',
-							label: '3K'
-						},
-						{
-							value: '2',
-							label: '4K'
-						},
-						{
-							value: '2',
-							label: '5K'
-						},
-						{
-							value: '2',
-							label: '6K'
-						},
-						{
-							value: '2',
-							label: '7K'
-						},
-						{
-							value: '2',
-							label: '8K'
-						},
-						{
-							value: '2',
-							label: '9K'
-						},
-						{
-							value: '2',
-							label: '10K'
-						},
-						{
-							value: '2',
-							label: '11K'
-						},
-						{
-							value: '2',
-							label: '12K'
-						}
-					],
-					[{
-						value: '1',
-						label: '×'
-					}],
-					[{
-							value: '3',
-							label: '12'
-						},
-						{
-							value: '4',
-							label: '13'
-						},
-						{
-							value: '4',
-							label: '14'
-						},
-						{
-							value: '4',
-							label: '15'
-						},
-						{
-							value: '4',
-							label: '16'
-						}
-					],
-					[{
-						value: '1',
-						label: '月'
-					}],
-				],
+				sele4_4: [],
 				sele4_4_val: '',
 				hangyeValue: "",
 				hangyeIdList: '',
@@ -614,6 +487,9 @@
 				} else {
 					this.oldFlag = false
 				}
+				this.sele5_2 = this.sele5_2.filter(ele => {
+					return Number(ele.label) > Number(this.sele5_1_val)
+				})
 			},
 			seleShow5_2Click() {
 				if (this.oldFlag) {
@@ -677,18 +553,7 @@
 				this.sele4_4_val = `${e[0].label}~${e[2].label}*${e[4].label.substring(0,e[4].label.length-1)}薪`
 				this.nsr =
 					`${Number(e[0].label.substring(0,e[0].label.length-1))*Number(e[4].label.substring(0,e[4].label.length-1))/10}-${Number(e[2].label.substring(0,e[2].label.length-1))*Number(e[4].label.substring(0,e[4].label.length-1))/10}`
-				// this.def4_4 = []
-				// this.sele4_2.forEach((ele,i)=>{
-				// 	if(ele.value == e[0].value){
-				// 		this.def4_2 = [i]
-				// 	}
-				// })
-				// this.xinziList.forEach((ele,i)=>{
-				// 	if(ele.value == e[0].value){
-				// 		this.def4_4 = [i]
-				// 		ele.chli
-				// 	}
-				// })
+
 			},
 			getNumList(e){
 				console.log(e)
@@ -806,6 +671,13 @@
 					}
 				})
 				this.sele5_1_val = e[0].label
+				this.sele5_2 = []
+				for (let i = 20; i < 60; i++) {
+					this.sele5_2.push({
+						value: i + 1,
+						label: i + 1
+					})
+				}
 				this.sele5_2 = this.sele5_2.filter(ele => {
 					return Number(ele.label) > Number(e[0].label)
 				})

@@ -21,7 +21,7 @@
 					<view v-if="item.checkNum>0" class="numBox">{{item.checkNum}}</view>
 					<view class="after"></view>
 				</view>
-				<view style="width: 10rpx;height: 184rpx;">
+				<view style="width: 100%;height: 220rpx;background-color: #f8faff;">
 
 				</view>
 			</scroll-view>
@@ -199,6 +199,7 @@
 				i2: -1,
 				i3: 0,
 				numList: [],
+				zongNum:0,
 			}
 		},
 		onShow() {
@@ -260,7 +261,7 @@
 				}, 1000)
 			},
 			wat1() {
-				var i = 0;
+				// var i = 0;
 				console.log(this.i3)
 				var ele = this.tabbar[this.i3]
 				ele.chooseList = []
@@ -275,14 +276,15 @@
 					return ele4.checked
 				}).length
 				console.log(ele.checkNum, 'eleNum')
-				i += ele.checkNum
-				if (i > 0 || this.chooseList2.length > 0) {
-					this.footer_show = true
-				} else {
-					this.footer_show = false
-				}
-				console.log(i, 'iii')
+				// i += ele.checkNum
+				// if (i > 0 || this.chooseList2.length > 0) {
+				// 	this.footer_show = true
+				// } else {
+				// 	this.footer_show = false
+				// }
+				// console.log(i, 'iii')
 				console.log(ele.chooseList, 'chooseList')
+				this.seeNum()
 			},
 			wat2() {
 				var i = 0;
@@ -302,14 +304,25 @@
 					})
 				}
 				console.log(ele.checkNum, 'eleNum')
-				i += ele.checkNum
-				if (i > 0 || this.chooseList2.length > 0) {
+				// i += ele.checkNum
+				// if (i > 0 || this.chooseList2.length > 0) {
+				// 	this.footer_show = true
+				// } else {
+				// 	this.footer_show = false
+				// }
+				// console.log(i, 'iii')
+				console.log(ele.chooseList, 'chooseList')
+				this.seeNum()
+			},
+			seeNum(){
+				var a = this.tabbar.filter(ele=>{
+					return ele.checkNum && ele.checkNum>0
+				})
+				if(a.length>0){
 					this.footer_show = true
-				} else {
+				}else{
 					this.footer_show = false
 				}
-				console.log(i, 'iii')
-				console.log(ele.chooseList, 'chooseList')
 			},
 			watchTabbar() {
 				var i = 0;

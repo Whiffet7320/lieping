@@ -474,40 +474,24 @@
 					<view class="nn-tit1">1.{{dataObj.is_scope1 == 0 ? '任意即可':'必须全部'}}：<text
 							style="color: #707070;">{{dataObj.scope1_keywords}}</text></view>
 					<view class="n2b-btns">
-						<view class="b1" @click="is10_1 = !is10_1;is10_6=false;if(is10_1&&is10_2&&is10_3&&is10_4){
-							is10_5=true
-						}else{
-							is10_5=false
-						}">
+						<view class="b1" @click="is10_1 = !is10_1;is10_6=false;is10_5=false">
 							<view class="b1-txt1">最近</view>
 							<view v-if="!is10_1" class="circle"></view>
 							<u-icon v-else name="checkmark-circle-fill" color="#2979ff" size="24"></u-icon>
 						</view>
-						<view v-if="jiduan>1" @click="is10_2 = !is10_2;is10_6=false;if(is10_1&&is10_2&&is10_3&&is10_4){
-							is10_5=true
-						}else{
-							is10_5=false
-						}" style="margin-left: 42rpx;" class="b1">
+						<view v-if="jiduan>1" @click="is10_2 = !is10_2;is10_6=false;is10_5=false" style="margin-left: 42rpx;" class="b1">
 							<view class="b1-txt1">第二段</view>
 							<view v-if="!is10_2" class="circle"></view>
 							<u-icon v-else name="checkmark-circle-fill" color="#2979ff" size="24"></u-icon>
 						</view>
-						<view v-if="jiduan>2" @click="is10_3 = !is10_3;is10_6=false;if(is10_1&&is10_2&&is10_3&&is10_4){
-							is10_5=true
-						}else{
-							is10_5=false
-						}" style="margin-left: 42rpx;" class="b1">
+						<view v-if="jiduan>2" @click="is10_3 = !is10_3;is10_6=false;is10_5=false" style="margin-left: 42rpx;" class="b1">
 							<view class="b1-txt1">第三段</view>
 							<view v-if="!is10_3" class="circle"></view>
 							<u-icon v-else name="checkmark-circle-fill" color="#2979ff" size="24"></u-icon>
 						</view>
 					</view>
 					<view class="n2b-btns">
-						<view v-if="jiduan>3" class="b1" style="margin-right: 42rpx;" @click="is10_4 = !is10_4;is10_6=false;if(is10_1&&is10_2&&is10_3&&is10_4){
-							is10_5=true
-						}else{
-							is10_5=false
-						}">
+						<view v-if="jiduan>3" class="b1" style="margin-right: 42rpx;" @click="is10_4 = !is10_4;is10_6=false;is10_5=false">
 							<view class="b1-txt1">第四段</view>
 							<view v-if="!is10_4" class="circle"></view>
 							<u-icon v-else name="checkmark-circle-fill" color="#2979ff" size="24"></u-icon>
@@ -534,40 +518,24 @@
 							style="color: #707070;">{{dataObj.scope2_keywords}}</text>
 					</view>
 					<view class="n2b-btns">
-						<view class="b1" @click="is6_1 = !is6_1;is6_6=false;if(is6_1&&is6_2&&is6_3&&is6_4){
-							is6_5=true
-						}else{
-							is6_5=false
-						}">
+						<view class="b1" @click="is6_1 = !is6_1;is6_6=false;is6_5=false;">
 							<view class="b1-txt1">最近</view>
 							<view v-if="!is6_1" class="circle"></view>
 							<u-icon v-else name="checkmark-circle-fill" color="#2979ff" size="24"></u-icon>
 						</view>
-						<view v-if="jiduan>1" @click="is6_2 = !is6_2;is6_6=false;if(is6_1&&is6_2&&is6_3&&is6_4){
-							is6_5=true
-						}else{
-							is6_5=false
-						}" style="margin-left: 42rpx;" class="b1">
+						<view v-if="jiduan>1" @click="is6_2 = !is6_2;is6_6=false;is6_5=false;" style="margin-left: 42rpx;" class="b1">
 							<view class="b1-txt1">第二段</view>
 							<view v-if="!is6_2" class="circle"></view>
 							<u-icon v-else name="checkmark-circle-fill" color="#2979ff" size="24"></u-icon>
 						</view>
-						<view v-if="jiduan>2" @click="is6_3 = !is6_3;is6_6=false;if(is6_1&&is6_2&&is6_3&&is6_4){
-							is6_5=true
-						}else{
-							is6_5=false
-						}" style="margin-left: 42rpx;" class="b1">
+						<view v-if="jiduan>2" @click="is6_3 = !is6_3;is6_6=false;is6_5=false;" style="margin-left: 42rpx;" class="b1">
 							<view class="b1-txt1">第三段</view>
 							<view v-if="!is6_3" class="circle"></view>
 							<u-icon v-else name="checkmark-circle-fill" color="#2979ff" size="24"></u-icon>
 						</view>
 					</view>
 					<view class="n2b-btns">
-						<view v-if="jiduan>3" class="b1" style="margin-right: 42rpx;" @click="is6_4 = !is6_4;is6_6=false;if(is6_1&&is6_2&&is6_3&&is6_4){
-							is6_5=true
-						}else{
-							is6_5=false
-						}">
+						<view v-if="jiduan>3" class="b1" style="margin-right: 42rpx;" @click="is6_4 = !is6_4;is6_6=false;is6_5=false;">
 							<view class="b1-txt1">第四段</view>
 							<view v-if="!is6_4" class="circle"></view>
 							<u-icon v-else name="checkmark-circle-fill" color="#2979ff" size="24"></u-icon>
@@ -592,7 +560,7 @@
 							style="color: #707070;">{{dataObj.scope3_keywords}}</text>
 					</view>
 					<view class="n2b-btns">
-						<view class="b1" @click="is11_1 = !is11_1;is11_6=false;if(is11_1&&is11_2&&is11_3&&is11_4){
+						<!-- <view class="b1" @click="is11_1 = !is11_1;is11_6=false;if(is11_1&&is11_2&&is11_3&&is11_4){
 							is11_5=true
 						}else{
 							is11_5=false
@@ -600,32 +568,25 @@
 							<view class="b1-txt1">最近</view>
 							<view v-if="!is11_1" class="circle"></view>
 							<u-icon v-else name="checkmark-circle-fill" color="#2979ff" size="24"></u-icon>
+						</view> -->
+						<view class="b1" @click="is11_1 = !is11_1;is11_6=false;is11_5=false">
+							<view class="b1-txt1">最近</view>
+							<view v-if="!is11_1" class="circle"></view>
+							<u-icon v-else name="checkmark-circle-fill" color="#2979ff" size="24"></u-icon>
 						</view>
-						<view v-if="jiduan>1" @click="is11_2 = !is11_2;is11_6=false;if(is11_1&&is11_2&&is11_3&&is11_4){
-							is11_5=true
-						}else{
-							is11_5=false
-						}" style="margin-left: 42rpx;" class="b1">
+						<view v-if="jiduan>1" @click="is11_2 = !is11_2;is11_6=false;is11_5=false" style="margin-left: 42rpx;" class="b1">
 							<view class="b1-txt1">第二段</view>
 							<view v-if="!is11_2" class="circle"></view>
 							<u-icon v-else name="checkmark-circle-fill" color="#2979ff" size="24"></u-icon>
 						</view>
-						<view v-if="jiduan>2" @click="is11_3 = !is11_3;is11_6=false;if(is11_1&&is11_2&&is11_3&&is11_4){
-							is11_5=true
-						}else{
-							is11_5=false
-						}" style="margin-left: 42rpx;" class="b1">
+						<view v-if="jiduan>2" @click="is11_3 = !is11_3;is11_6=false;is11_5=false" style="margin-left: 42rpx;" class="b1">
 							<view class="b1-txt1">第三段</view>
 							<view v-if="!is11_3" class="circle"></view>
 							<u-icon v-else name="checkmark-circle-fill" color="#2979ff" size="24"></u-icon>
 						</view>
 					</view>
 					<view class="n2b-btns">
-						<view v-if="jiduan>3" class="b1" style="margin-right: 42rpx;" @click="is11_4 = !is11_4;is11_6=false;if(is11_1&&is11_2&&is11_3&&is11_4){
-							is11_5=true
-						}else{
-							is11_5=false
-						}">
+						<view v-if="jiduan>3" class="b1" style="margin-right: 42rpx;" @click="is11_4 = !is11_4;is11_6=false;is11_5=false">
 							<view class="b1-txt1">第四段</view>
 							<view v-if="!is11_4" class="circle"></view>
 							<u-icon v-else name="checkmark-circle-fill" color="#2979ff" size="24"></u-icon>
@@ -1040,61 +1001,11 @@
 			}
 		},
 		onShow() {
-			// this.sele5_1 = []
-			// this.sele5_2 = []
-			// for (let i = 16; i < 60; i++) {
-			// 	this.sele21_1.push({
-			// 		value: i,
-			// 		label: i
-			// 	})
-			// }
-			// for (let i = 0; i <= 30; i++) {
-			// 	this.sele24_1.push({
-			// 		value: i,
-			// 		label: i.toString()
-			// 	})
-			// 	this.sele24_2.push({
-			// 		value: i,
-			// 		label: i.toString()
-			// 	})
-			// 	this.sele24_3.push({
-			// 		value: i,
-			// 		label: i.toString()
-			// 	})
-			// 	this.sele24_4.push({
-			// 		value: i,
-			// 		label: i.toString()
-			// 	})
-			// }
-			// for (let i = 0; i <= 11; i++) {
-			// 	this.sele25_1.push({
-			// 		value: i,
-			// 		label: i.toString()
-			// 	})
-			// 	this.sele25_2.push({
-			// 		value: i,
-			// 		label: i.toString()
-			// 	})
-			// 	this.sele25_3.push({
-			// 		value: i,
-			// 		label: i.toString()
-			// 	})
-			// 	this.sele25_4.push({
-			// 		value: i,
-			// 		label: i.toString()
-			// 	})
-			// }
-			// for (let i = 1; i <= 20; i++) {
-			// 	this.sele22_1.push({
-			// 		value: i,
-			// 		label: `${i.toString()}段`
-			// 	})
-			// }
 		},
 		onLoad(option) {
 			this.sele5_1 = []
 			this.sele5_2 = []
-			for (let i = 16; i < 60; i++) {
+			for (let i = 20; i < 61; i++) {
 				this.sele21_1.push({
 					value: i,
 					label: i
